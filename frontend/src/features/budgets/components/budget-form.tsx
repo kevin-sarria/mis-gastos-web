@@ -4,15 +4,8 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useAuth } from '@/features/auth/store/auth-context';
-import { useCategories } from '@/features/categories/hooks/use-categories';
+import { CategorySelect } from '@/features/categories/components/category-select';
 import { CurrencyInput } from '@/shared/components/currency-input';
 import { messageFromError } from '@/shared/lib/error-message';
 import { useCreateBudget } from '../hooks/use-budgets';
@@ -22,7 +15,6 @@ export function BudgetForm({ onDone }: { onDone?: () => void }) {
   const { user } = useAuth();
   const minorUnits = user?.currency?.minorUnits ?? 2;
   const createBudget = useCreateBudget();
-  const { data: categories = [] } = useCategories('EXPENSE');
 
   const form = useForm<BudgetFormValues>({
     resolver: zodResolver(budgetFormSchema),
@@ -78,22 +70,13 @@ export function BudgetForm({ onDone }: { onDone?: () => void }) {
 
       <div className="space-y-2">
         <Label>Categoría</Label>
-        <Select
+        <CategorySelect
+          id="categoryId"
+          type="EXPENSE"
+          includeGlobalOption
           value={form.watch('categoryId')}
-          onValueChange={(value) => form.setValue('categoryId', value, { shouldValidate: true })}
-        >
-          <SelectTrigger id="categoryId">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent position="popper" sideOffset={4}>
-            <SelectItem value="global">Global (todos los gastos)</SelectItem>
-            {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={(value) => form.setValue('categoryId', value, { shouldValidate: true })}
+        />
       </div>
 
       <div className="space-y-2">

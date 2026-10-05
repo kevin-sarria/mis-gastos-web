@@ -3,6 +3,7 @@ export type IncomeFrequency = 'ONE_TIME' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEA
 export interface IncomeCategory {
   id: string;
   name: string;
+  color: string | null;
 }
 
 export interface Income {

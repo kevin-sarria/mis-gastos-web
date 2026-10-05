@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/features/auth/store/auth-context';
-import { useCategories } from '@/features/categories/hooks/use-categories';
+import { CategorySelect } from '@/features/categories/components/category-select';
 import { CurrencyInput } from '@/shared/components/currency-input';
 import { messageFromError } from '@/shared/lib/error-message';
 import { useCreateIncome } from '../hooks/use-incomes';
@@ -38,7 +38,6 @@ export function IncomeForm({ onDone }: { onDone?: () => void }) {
   const { user } = useAuth();
   const minorUnits = user?.currency?.minorUnits ?? 2;
   const createIncome = useCreateIncome();
-  const { data: categories = [] } = useCategories('INCOME');
 
   const form = useForm<IncomeFormValues>({
     resolver: zodResolver(incomeFormSchema),
@@ -102,21 +101,12 @@ export function IncomeForm({ onDone }: { onDone?: () => void }) {
 
       <div className="space-y-2">
         <Label>Categoría</Label>
-        <Select
+        <CategorySelect
+          id="categoryId"
+          type="INCOME"
           value={form.watch('categoryId')}
-          onValueChange={(value) => form.setValue('categoryId', value, { shouldValidate: true })}
-        >
-          <SelectTrigger id="categoryId">
-            <SelectValue placeholder="Elige una categoría" />
-          </SelectTrigger>
-          <SelectContent position="popper" sideOffset={4}>
-            {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={(value) => form.setValue('categoryId', value, { shouldValidate: true })}
+        />
         {form.formState.errors.categoryId ? (
           <p className="text-sm text-destructive">{form.formState.errors.categoryId.message}</p>
         ) : null}
@@ -132,7 +122,7 @@ export function IncomeForm({ onDone }: { onDone?: () => void }) {
             })
           }
         >
-          <SelectTrigger id="frequency">
+          <SelectTrigger id="frequency" className="w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent position="popper" sideOffset={4}>

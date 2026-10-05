@@ -1,6 +1,7 @@
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/store/auth-context';
+import { DEFAULT_CATEGORY_COLOR } from '@/features/categories/domain/category-colors';
 import { formatMoney } from '@/shared/lib/money';
 import type { Budget } from '../domain/budget';
 import { useDeleteBudget } from '../hooks/use-budgets';
@@ -12,7 +13,11 @@ export function BudgetList({ budgets }: { budgets: Budget[] }) {
   return (
     <ul className="divide-y">
       {budgets.map((budget) => (
-        <li key={budget.id} className="flex items-center justify-between gap-3 py-3">
+        <li
+          key={budget.id}
+          className="flex items-center justify-between gap-3 border-l-2 py-3 pl-3"
+          style={{ borderLeftColor: budget.category?.color ?? DEFAULT_CATEGORY_COLOR }}
+        >
           <div className="min-w-0">
             <p className="truncate font-medium">{budget.name}</p>
             <p className="text-sm text-muted-foreground">

@@ -5,16 +5,9 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/features/auth/store/auth-context';
-import { useCategories } from '@/features/categories/hooks/use-categories';
+import { CategorySelect } from '@/features/categories/components/category-select';
 import { httpFileApi } from '@/features/files/api/file-api';
 import { CurrencyInput } from '@/shared/components/currency-input';
 import { messageFromError } from '@/shared/lib/error-message';
@@ -36,7 +29,6 @@ export function ExpenseForm({ onDone }: { onDone?: () => void }) {
   const { user } = useAuth();
   const minorUnits = user?.currency?.minorUnits ?? 2;
   const createExpense = useCreateExpense();
-  const { data: categories = [] } = useCategories('EXPENSE');
   const [file, setFile] = useState<File | null>(null);
 
   const form = useForm<ExpenseFormValues>({
@@ -117,21 +109,12 @@ export function ExpenseForm({ onDone }: { onDone?: () => void }) {
 
       <div className="space-y-2">
         <Label>Categoría</Label>
-        <Select
+        <CategorySelect
+          id="categoryId"
+          type="EXPENSE"
           value={form.watch('categoryId')}
-          onValueChange={(value) => form.setValue('categoryId', value, { shouldValidate: true })}
-        >
-          <SelectTrigger id="categoryId">
-            <SelectValue placeholder="Elige una categoría" />
-          </SelectTrigger>
-          <SelectContent position="popper" sideOffset={4}>
-            {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          onChange={(value) => form.setValue('categoryId', value, { shouldValidate: true })}
+        />
         {form.formState.errors.categoryId ? (
           <p className="text-sm text-destructive">{form.formState.errors.categoryId.message}</p>
         ) : null}

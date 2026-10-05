@@ -2,6 +2,7 @@ import { Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/store/auth-context';
+import { DEFAULT_CATEGORY_COLOR } from '@/features/categories/domain/category-colors';
 import { formatMoney } from '@/shared/lib/money';
 import { EXPENSE_TAG_LABELS } from '../domain/expense';
 import type { Expense } from '../domain/expense';
@@ -14,7 +15,11 @@ export function ExpenseList({ expenses }: { expenses: Expense[] }) {
   return (
     <ul className="divide-y">
       {expenses.map((expense) => (
-        <li key={expense.id} className="py-3">
+        <li
+          key={expense.id}
+          className="border-l-2 py-3 pl-3"
+          style={{ borderLeftColor: expense.category?.color ?? DEFAULT_CATEGORY_COLOR }}
+        >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="truncate font-medium">{expense.title}</p>

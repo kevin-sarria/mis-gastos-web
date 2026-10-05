@@ -1,6 +1,7 @@
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/store/auth-context';
+import { DEFAULT_CATEGORY_COLOR } from '@/features/categories/domain/category-colors';
 import { formatMoney } from '@/shared/lib/money';
 import type { Income } from '../domain/income';
 import { useDeleteIncome } from '../hooks/use-incomes';
@@ -12,7 +13,11 @@ export function IncomeList({ incomes }: { incomes: Income[] }) {
   return (
     <ul className="divide-y">
       {incomes.map((income) => (
-        <li key={income.id} className="flex items-center justify-between gap-3 py-3">
+        <li
+          key={income.id}
+          className="flex items-center justify-between gap-3 border-l-2 py-3 pl-3"
+          style={{ borderLeftColor: income.category?.color ?? DEFAULT_CATEGORY_COLOR }}
+        >
           <div className="min-w-0">
             <p className="truncate font-medium">{income.title}</p>
             <p className="text-sm text-muted-foreground">

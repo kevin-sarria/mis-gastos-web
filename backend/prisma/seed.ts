@@ -23,19 +23,19 @@ const currencies: SeedCurrency[] = [
   { code: 'PEN', name: 'Sol peruano', symbol: 'S/', minorUnits: 2, isDefault: false },
 ];
 
-const defaultCategories: { type: CategoryType; name: string }[] = [
-  { type: 'INCOME', name: 'Sueldo fijo' },
-  { type: 'INCOME', name: 'Sueldo variable' },
-  { type: 'INCOME', name: 'Otros ingresos' },
-  { type: 'EXPENSE', name: 'Vivienda' },
-  { type: 'EXPENSE', name: 'Alimentación' },
-  { type: 'EXPENSE', name: 'Transporte' },
-  { type: 'EXPENSE', name: 'Salud' },
-  { type: 'EXPENSE', name: 'Ocio' },
-  { type: 'EXPENSE', name: 'Educación' },
-  { type: 'EXPENSE', name: 'Servicios' },
-  { type: 'EXPENSE', name: 'Ropa' },
-  { type: 'EXPENSE', name: 'Otros gastos' },
+const defaultCategories: { type: CategoryType; name: string; color: string }[] = [
+  { type: 'INCOME', name: 'Sueldo fijo', color: '#22c55e' },
+  { type: 'INCOME', name: 'Sueldo variable', color: '#10b981' },
+  { type: 'INCOME', name: 'Otros ingresos', color: '#14b8a6' },
+  { type: 'EXPENSE', name: 'Vivienda', color: '#6366f1' },
+  { type: 'EXPENSE', name: 'Alimentación', color: '#f59e0b' },
+  { type: 'EXPENSE', name: 'Transporte', color: '#0ea5e9' },
+  { type: 'EXPENSE', name: 'Salud', color: '#ef4444' },
+  { type: 'EXPENSE', name: 'Ocio', color: '#ec4899' },
+  { type: 'EXPENSE', name: 'Educación', color: '#8b5cf6' },
+  { type: 'EXPENSE', name: 'Servicios', color: '#06b6d4' },
+  { type: 'EXPENSE', name: 'Ropa', color: '#a855f7' },
+  { type: 'EXPENSE', name: 'Otros gastos', color: '#64748b' },
 ];
 
 async function seedCurrencies(): Promise<void> {
@@ -56,16 +56,26 @@ async function seedCurrencies(): Promise<void> {
 
 async function seedDefaultCategories(): Promise<void> {
   let created = 0;
+  let colorized = 0;
+
   for (const category of defaultCategories) {
     const existing = await prisma.category.findFirst({
       where: { userId: null, type: category.type, name: category.name },
     });
+
     if (!existing) {
       await prisma.category.create({ data: { ...category, isDefault: true } });
       created += 1;
+    } else if (!existing.color) {
+      await prisma.category.update({
+        where: { id: existing.id },
+        data: { color: category.color },
+      });
+      colorized += 1;
     }
   }
-  console.log(`✅ Categorías por defecto creadas: ${created}`);
+
+  console.log(`✅ Categorías por defecto: ${created} creadas, ${colorized} coloreadas`);
 }
 
 async function seedSuperAdmin(): Promise<void> {

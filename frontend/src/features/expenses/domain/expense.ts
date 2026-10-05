@@ -17,6 +17,12 @@ export interface ExpenseAttachment {
   url: string;
 }
 
+export interface ExpenseCategory {
+  id: string;
+  name: string;
+  color: string | null;
+}
+
 export interface Expense {
   id: string;
   categoryId: string;
@@ -25,7 +31,7 @@ export interface Expense {
   date: string;
   justification: string | null;
   tags: ExpenseTag[];
-  category: { id: string; name: string } | null;
+  category: ExpenseCategory | null;
   attachments: ExpenseAttachment[];
 }
 
@@ -45,7 +51,7 @@ export interface ExpenseDto {
   amountMinorUnits: number;
   date: string;
   justification: string | null;
-  category: { id: string; name: string } | null;
+  category: ExpenseCategory | null;
   tags: { expenseId: string; tag: ExpenseTag }[];
   attachments: {
     id: string;

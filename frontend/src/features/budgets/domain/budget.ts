@@ -8,7 +8,7 @@ export interface Budget {
   period: BudgetPeriod;
   alertThresholdPct: number;
   isActive: boolean;
-  category: { id: string; name: string } | null;
+  category: { id: string; name: string; color: string | null } | null;
 }
 
 export interface BudgetCreateInput {
