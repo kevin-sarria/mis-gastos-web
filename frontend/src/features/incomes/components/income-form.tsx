@@ -104,7 +104,7 @@ export function IncomeForm({ onDone }: { onDone?: () => void }) {
           <SelectTrigger id="categoryId">
             <SelectValue placeholder="Elige una categoría" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper" sideOffset={4}>
             {categories.map((category) => (
               <SelectItem key={category.id} value={category.id}>
                 {category.name}
@@ -130,7 +130,7 @@ export function IncomeForm({ onDone }: { onDone?: () => void }) {
           <SelectTrigger id="frequency">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper" sideOffset={4}>
             {FREQUENCIES.map((frequency) => (
               <SelectItem key={frequency.value} value={frequency.value}>
                 {frequency.label}

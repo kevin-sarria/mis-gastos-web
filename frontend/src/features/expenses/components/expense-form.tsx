@@ -114,7 +114,7 @@ export function ExpenseForm({ onDone }: { onDone?: () => void }) {
           <SelectTrigger id="categoryId">
             <SelectValue placeholder="Elige una categoría" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper" sideOffset={4}>
             {categories.map((category) => (
               <SelectItem key={category.id} value={category.id}>
                 {category.name}

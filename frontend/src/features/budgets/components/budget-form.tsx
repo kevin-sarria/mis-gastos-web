@@ -75,7 +75,7 @@ export function BudgetForm({ onDone }: { onDone?: () => void }) {
           <SelectTrigger id="categoryId">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent position="popper" sideOffset={4}>
             <SelectItem value="global">Global (todos los gastos)</SelectItem>
             {categories.map((category) => (
               <SelectItem key={category.id} value={category.id}>

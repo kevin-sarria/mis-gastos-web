@@ -116,7 +116,7 @@ export function RegisterForm() {
             <SelectTrigger id="currencyCode" className="w-full">
               <SelectValue placeholder="Elige tu moneda" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="popper" sideOffset={4}>
               {currencies.map((currency) => (
                 <SelectItem key={currency.code} value={currency.code}>
                   {currency.symbol} — {currency.name}
