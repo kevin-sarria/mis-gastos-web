@@ -1,0 +1,290 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// Enums
+// ============================================================
+
+enum Role {
+  SUPER_ADMIN
+  USER
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+}
+
+enum Frequency {
+  ONE_TIME
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+// Etiquetas de gasto. Se modelan como tabla de unión porque MySQL
+// no admite listas escalares en Prisma.
+enum ExpenseTagType {
+  FIXED // fijo
+  VARIABLE // variable
+  EMERGENCY // emergencia
+  ANT_EXPENSE // gasto hormiga
+}
+
+enum BudgetPeriod {
+  MONTHLY
+  WEEKLY
+}
+
+enum AlertType {
+  OVER_BUDGET
+  NEAR_BUDGET
+  ANOMALY
+}
+
+enum TokenType {
+  PASSWORD_RESET
+}
+
+enum StorageProvider {
+  LOCAL
+  S3
+  CLOUDINARY
+}
+
+// ============================================================
+// Moneda maestra (administrada por el super administrador)
+// ============================================================
+
+model Currency {
+  code       String   @id // Código ISO 4217, ej. "COP", "EUR"
+  name       String // "Peso colombiano"
+  symbol     String // "$"
+  minorUnits Int // Decimales: 0, 2, 3...
+  isActive   Boolean  @default(true)
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  users User[]
+
+  @@index([isActive])
+}
+
+// ============================================================
+// Usuario
+// ============================================================
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String? // null si entró con Google
+  googleId     String?  @unique
+  name         String
+  avatarUrl    String?
+  role         Role     @default(USER)
+  currencyCode String // moneda elegida al registrarse
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  currency      Currency      @relation(fields: [currencyCode], references: [code])
+  categories    Category[]
+  incomes       Income[]
+  expenses      Expense[]
+  budgets       Budget[]
+  alerts        Alert[]
+  refreshTokens RefreshToken[]
+  emailTokens   EmailToken[]
+  attachments   Attachment[]
+
+  @@index([currencyCode])
+}
+
+// ============================================================
+// Sesión: refresh token (hasheado) con rotación y familia
+// ============================================================
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  familyId  String // para detectar reuso → revocar toda la familia
+  expiresAt DateTime
+  revokedAt DateTime?
+  userAgent String?
+  ip        String?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+}
+
+// ============================================================
+// Categorías (defaults del sistema con userId null + personalizadas)
+// ============================================================
+
+model Category {
+  id        String       @id @default(cuid())
+  userId    String?
+  type      CategoryType
+  name      String
+  color     String?
+  icon      String?
+  isDefault Boolean      @default(false)
+  createdAt DateTime     @default(now())
+
+  user     User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  incomes  Income[]
+  expenses Expense[]
+  budgets  Budget[]
+
+  @@index([userId, type])
+}
+
+// ============================================================
+// Ingresos
+// ============================================================
+
+model Income {
+  id               String    @id @default(cuid())
+  userId           String
+  categoryId       String
+  title            String
+  amountMinorUnits Int // en unidades menores de la moneda del usuario
+  frequency        Frequency @default(MONTHLY)
+  date             DateTime // fecha del ingreso / primer vencimiento
+  note             String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@index([userId, date])
+  @@index([categoryId])
+}
+
+// ============================================================
+// Gastos
+// ============================================================
+
+model Expense {
+  id               String    @id @default(cuid())
+  userId           String
+  categoryId       String
+  title            String
+  amountMinorUnits Int // en unidades menores de la moneda del usuario
+  date             DateTime
+  justification    String?  @db.Text
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    Category     @relation(fields: [categoryId], references: [id])
+  tags        ExpenseTag[]
+  attachments Attachment[]
+
+  @@index([userId, date])
+  @@index([categoryId])
+}
+
+model ExpenseTag {
+  expenseId String
+  tag       ExpenseTagType
+
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+  @@id([expenseId, tag])
+  @@index([tag])
+}
+
+// ============================================================
+// Facturas / archivos adjuntos
+// ============================================================
+
+model Attachment {
+  id         String          @id @default(cuid())
+  userId     String
+  expenseId  String
+  filename   String
+  mimeType   String
+  sizeBytes  Int
+  storageKey String // clave dentro del proveedor de almacenamiento
+  provider   StorageProvider @default(LOCAL)
+  createdAt  DateTime        @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expenseId])
+}
+
+// ============================================================
+// Presupuestos
+// ============================================================
+
+model Budget {
+  id                String       @id @default(cuid())
+  userId            String
+  categoryId        String? // null = presupuesto global
+  name              String
+  amountMinorUnits  Int
+  period            BudgetPeriod @default(MONTHLY)
+  alertThresholdPct Int          @default(80)
+  isActive          Boolean      @default(true)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id])
+
+  @@index([userId])
+  @@index([categoryId])
+}
+
+// ============================================================
+// Alertas
+// ============================================================
+
+model Alert {
+  id         String    @id @default(cuid())
+  userId     String
+  type       AlertType
+  categoryId String?
+  severity   String // INFO | WARNING | CRITICAL
+  message    String    @db.Text
+  readAt     DateTime?
+  createdAt  DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+// ============================================================
+// Tokens de un solo uso (recuperación de contraseña)
+// ============================================================
+
+model EmailToken {
+  id        String    @id @default(cuid())
+  userId    String
+  type      TokenType
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

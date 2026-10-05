@@ -1,0 +1,22 @@
+services:
+  db:
+    image: mariadb:11.4
+    container_name: mis-gastos-db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: mis_gastos
+      MARIADB_USER: mis_gastos
+      MARIADB_PASSWORD: mis_gastos
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db_data:
