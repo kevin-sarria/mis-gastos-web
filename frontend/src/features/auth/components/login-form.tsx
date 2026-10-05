@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PasswordInput } from '@/shared/components/password-input';
 import { messageFromError } from '@/shared/lib/error-message';
 import { loginSchema, type LoginFormValues } from '../schemas/auth-form.schemas';
 import { useAuth } from '../store/auth-context';
@@ -46,9 +47,8 @@ export function LoginForm() {
 
       <div className="space-y-2">
         <Label htmlFor="password">Contraseña</Label>
-        <Input
+        <PasswordInput
           id="password"
-          type="password"
           autoComplete="current-password"
           {...form.register('password')}
         />

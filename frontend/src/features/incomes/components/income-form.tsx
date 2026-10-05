@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,8 +14,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/features/auth/store/auth-context';
 import { useCategories } from '@/features/categories/hooks/use-categories';
+import { CurrencyInput } from '@/shared/components/currency-input';
 import { messageFromError } from '@/shared/lib/error-message';
-import { parseAmountToMinorUnits } from '@/shared/lib/money';
 import { useCreateIncome } from '../hooks/use-incomes';
 import { incomeFormSchema, type IncomeFormValues } from '../schemas/income-form.schema';
 
@@ -36,6 +36,7 @@ function todayInputValue(): string {
 
 export function IncomeForm({ onDone }: { onDone?: () => void }) {
   const { user } = useAuth();
+  const minorUnits = user?.currency?.minorUnits ?? 2;
   const createIncome = useCreateIncome();
   const { data: categories = [] } = useCategories('INCOME');
 
@@ -56,10 +57,7 @@ export function IncomeForm({ onDone }: { onDone?: () => void }) {
       await createIncome.mutateAsync({
         categoryId: values.categoryId,
         title: values.title,
-        amountMinorUnits: parseAmountToMinorUnits(
-          values.amount,
-          user?.currency?.minorUnits ?? 2,
-        ),
+        amountMinorUnits: Number(values.amount),
         frequency: values.frequency,
         date: new Date(values.date).toISOString(),
         note: values.note || null,
@@ -84,11 +82,18 @@ export function IncomeForm({ onDone }: { onDone?: () => void }) {
 
       <div className="space-y-2">
         <Label htmlFor="amount">Monto</Label>
-        <Input
-          id="amount"
-          inputMode="decimal"
-          placeholder="0.00"
-          {...form.register('amount')}
+        <Controller
+          control={form.control}
+          name="amount"
+          render={({ field }) => (
+            <CurrencyInput
+              id="amount"
+              placeholder="0"
+              minorUnits={minorUnits}
+              value={field.value}
+              onValueChange={field.onChange}
+            />
+          )}
         />
         {form.formState.errors.amount ? (
           <p className="text-sm text-destructive">{form.formState.errors.amount.message}</p>

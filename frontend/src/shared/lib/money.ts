@@ -17,14 +17,16 @@ export function formatMoney(
   return `${symbol} ${formatted}`.trim();
 }
 
-export function parseAmountToMinorUnits(input: string, minorUnits: number): number {
-  const normalized = input.trim().replace(',', '.');
-  const [majorPart = '0', fractionPart = ''] = normalized.split('.');
-  const major = Number.parseInt(majorPart, 10);
-  const fraction = fractionPart.padEnd(minorUnits, '0').slice(0, minorUnits);
+export function formatMoneyInput(rawDigits: string, minorUnits: number): string {
+  const digits = rawDigits.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+  if (digits === '') {
+    return '';
+  }
 
-  return (
-    (Number.isNaN(major) ? 0 : major) * 10 ** minorUnits +
-    (Number.parseInt(fraction || '0', 10) || 0)
-  );
+  const padded = digits.padStart(minorUnits + 1, '0');
+  const integerPart = minorUnits > 0 ? padded.slice(0, -minorUnits) : padded;
+  const decimalPart = minorUnits > 0 ? padded.slice(-minorUnits) : '';
+  const integerFormatted = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+  return minorUnits > 0 ? `${integerFormatted},${decimalPart}` : integerFormatted;
 }

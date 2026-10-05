@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,13 +13,14 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/features/auth/store/auth-context';
 import { useCategories } from '@/features/categories/hooks/use-categories';
+import { CurrencyInput } from '@/shared/components/currency-input';
 import { messageFromError } from '@/shared/lib/error-message';
-import { parseAmountToMinorUnits } from '@/shared/lib/money';
 import { useCreateBudget } from '../hooks/use-budgets';
 import { budgetFormSchema, type BudgetFormValues } from '../schemas/budget-form.schema';
 
 export function BudgetForm({ onDone }: { onDone?: () => void }) {
   const { user } = useAuth();
+  const minorUnits = user?.currency?.minorUnits ?? 2;
   const createBudget = useCreateBudget();
   const { data: categories = [] } = useCategories('EXPENSE');
 
@@ -32,10 +33,7 @@ export function BudgetForm({ onDone }: { onDone?: () => void }) {
     try {
       await createBudget.mutateAsync({
         name: values.name,
-        amountMinorUnits: parseAmountToMinorUnits(
-          values.amount,
-          user?.currency?.minorUnits ?? 2,
-        ),
+        amountMinorUnits: Number(values.amount),
         categoryId: values.categoryId === 'global' ? null : values.categoryId,
         period: 'MONTHLY',
         alertThresholdPct: values.alertThresholdPct,
@@ -60,7 +58,19 @@ export function BudgetForm({ onDone }: { onDone?: () => void }) {
 
       <div className="space-y-2">
         <Label htmlFor="amount">Límite mensual</Label>
-        <Input id="amount" inputMode="decimal" placeholder="0.00" {...form.register('amount')} />
+        <Controller
+          control={form.control}
+          name="amount"
+          render={({ field }) => (
+            <CurrencyInput
+              id="amount"
+              placeholder="0"
+              minorUnits={minorUnits}
+              value={field.value}
+              onValueChange={field.onChange}
+            />
+          )}
+        />
         {form.formState.errors.amount ? (
           <p className="text-sm text-destructive">{form.formState.errors.amount.message}</p>
         ) : null}
@@ -96,7 +106,9 @@ export function BudgetForm({ onDone }: { onDone?: () => void }) {
           {...form.register('alertThresholdPct', { valueAsNumber: true })}
         />
         {form.formState.errors.alertThresholdPct ? (
-          <p className="text-sm text-destructive">{form.formState.errors.alertThresholdPct.message}</p>
+          <p className="text-sm text-destructive">
+            {form.formState.errors.alertThresholdPct.message}
+          </p>
         ) : null}
       </div>
 

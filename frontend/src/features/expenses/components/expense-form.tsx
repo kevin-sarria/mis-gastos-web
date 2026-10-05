@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,8 +16,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/features/auth/store/auth-context';
 import { useCategories } from '@/features/categories/hooks/use-categories';
 import { httpFileApi } from '@/features/files/api/file-api';
+import { CurrencyInput } from '@/shared/components/currency-input';
 import { messageFromError } from '@/shared/lib/error-message';
-import { parseAmountToMinorUnits } from '@/shared/lib/money';
 import { EXPENSE_TAG_LABELS } from '../domain/expense';
 import type { ExpenseTag } from '../domain/expense';
 import { useCreateExpense } from '../hooks/use-expenses';
@@ -34,6 +34,7 @@ function todayInputValue(): string {
 
 export function ExpenseForm({ onDone }: { onDone?: () => void }) {
   const { user } = useAuth();
+  const minorUnits = user?.currency?.minorUnits ?? 2;
   const createExpense = useCreateExpense();
   const { data: categories = [] } = useCategories('EXPENSE');
   const [file, setFile] = useState<File | null>(null);
@@ -65,10 +66,7 @@ export function ExpenseForm({ onDone }: { onDone?: () => void }) {
       const expense = await createExpense.mutateAsync({
         categoryId: values.categoryId,
         title: values.title,
-        amountMinorUnits: parseAmountToMinorUnits(
-          values.amount,
-          user?.currency?.minorUnits ?? 2,
-        ),
+        amountMinorUnits: Number(values.amount),
         date: new Date(values.date).toISOString(),
         tags: values.tags,
         justification: values.justification || null,
@@ -99,7 +97,19 @@ export function ExpenseForm({ onDone }: { onDone?: () => void }) {
 
       <div className="space-y-2">
         <Label htmlFor="amount">Monto</Label>
-        <Input id="amount" inputMode="decimal" placeholder="0.00" {...form.register('amount')} />
+        <Controller
+          control={form.control}
+          name="amount"
+          render={({ field }) => (
+            <CurrencyInput
+              id="amount"
+              placeholder="0"
+              minorUnits={minorUnits}
+              value={field.value}
+              onValueChange={field.onChange}
+            />
+          )}
+        />
         {form.formState.errors.amount ? (
           <p className="text-sm text-destructive">{form.formState.errors.amount.message}</p>
         ) : null}
@@ -154,7 +164,11 @@ export function ExpenseForm({ onDone }: { onDone?: () => void }) {
 
       <div className="space-y-2">
         <Label htmlFor="justification">Justificación (opcional)</Label>
-        <Textarea id="justification" placeholder="¿Por qué fue necesario este gasto?" {...form.register('justification')} />
+        <Textarea
+          id="justification"
+          placeholder="¿Por qué fue necesario este gasto?"
+          {...form.register('justification')}
+        />
       </div>
 
       <div className="space-y-2">

@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/shared/components/password-input';
 import { Label } from '@/components/ui/label';
 import { messageFromError } from '@/shared/lib/error-message';
 import { httpAuthApi } from '../api/http-auth-api';
@@ -35,9 +35,8 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       <div className="space-y-2">
         <Label htmlFor="password">Nueva contraseña</Label>
-        <Input
+        <PasswordInput
           id="password"
-          type="password"
           autoComplete="new-password"
           {...form.register('password')}
         />
@@ -48,9 +47,8 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="confirmPassword">Repite la nueva contraseña</Label>
-        <Input
+        <PasswordInput
           id="confirmPassword"
-          type="password"
           autoComplete="new-password"
           {...form.register('confirmPassword')}
         />
