@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -13,28 +12,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { Currency } from '@/shared/domain/currency';
 import { messageFromError } from '@/shared/lib/error-message';
-import { httpAuthApi } from '../api/http-auth-api';
+import { useCurrencies } from '../hooks/use-currencies';
 import { registerSchema, type RegisterFormValues } from '../schemas/auth-form.schemas';
 import { useAuth } from '../store/auth-context';
 
 export function RegisterForm() {
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
-  const [currencies, setCurrencies] = useState<Currency[]>([]);
+  const {
+    data: currencies = [],
+    isLoading: currenciesLoading,
+    isError: currenciesError,
+  } = useCurrencies();
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: { name: '', email: '', password: '', confirmPassword: '', currencyCode: '' },
   });
 
-  useEffect(() => {
-    httpAuthApi
-      .getCurrencies()
-      .then(setCurrencies)
-      .catch(() => setCurrencies([]));
-  }, []);
+  const currenciesUnavailable = currenciesError || (!currenciesLoading && currencies.length === 0);
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
@@ -103,27 +100,41 @@ export function RegisterForm() {
 
       <div className="space-y-2">
         <Label>Moneda</Label>
-        <Select
-          value={form.watch('currencyCode')}
-          onValueChange={(value) => form.setValue('currencyCode', value, { shouldValidate: true })}
-        >
-          <SelectTrigger id="currencyCode">
-            <SelectValue placeholder="Elige tu moneda" />
-          </SelectTrigger>
-          <SelectContent>
-            {currencies.map((currency) => (
-              <SelectItem key={currency.code} value={currency.code}>
-                {currency.symbol} — {currency.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {currenciesLoading ? (
+          <p className="text-sm text-muted-foreground">Cargando monedas…</p>
+        ) : currenciesUnavailable ? (
+          <p className="text-sm text-destructive">
+            No se pudieron cargar las monedas. Comprueba que el backend esté en marcha.
+          </p>
+        ) : (
+          <Select
+            value={form.watch('currencyCode')}
+            onValueChange={(value) =>
+              form.setValue('currencyCode', value, { shouldValidate: true })
+            }
+          >
+            <SelectTrigger id="currencyCode" className="w-full">
+              <SelectValue placeholder="Elige tu moneda" />
+            </SelectTrigger>
+            <SelectContent>
+              {currencies.map((currency) => (
+                <SelectItem key={currency.code} value={currency.code}>
+                  {currency.symbol} — {currency.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         {form.formState.errors.currencyCode ? (
           <p className="text-sm text-destructive">{form.formState.errors.currencyCode.message}</p>
         ) : null}
       </div>
 
-      <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={form.formState.isSubmitting || currenciesUnavailable}
+      >
         Crear cuenta
       </Button>
     </form>
