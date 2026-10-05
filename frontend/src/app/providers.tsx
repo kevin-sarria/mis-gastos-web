@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
 import type { ReactNode } from 'react';
 import { Toaster } from 'sonner';
+import { AuthProvider } from '@/features/auth/store/auth-context';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,7 +18,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-        {children}
+        <AuthProvider>{children}</AuthProvider>
         <Toaster richColors closeButton position="top-right" />
       </ThemeProvider>
     </QueryClientProvider>

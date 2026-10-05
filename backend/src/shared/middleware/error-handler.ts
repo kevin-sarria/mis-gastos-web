@@ -28,6 +28,16 @@ export function errorHandler(
     return;
   }
 
+  const multerLike = error as { name?: string; code?: string } | null;
+  if (multerLike?.name === 'MulterError') {
+    const message =
+      multerLike.code === 'LIMIT_FILE_SIZE'
+        ? 'El archivo supera el tamaño máximo (10 MB)'
+        : 'Error al subir el archivo';
+    res.status(400).json({ error: { code: 'UPLOAD_ERROR', message } });
+    return;
+  }
+
   logger.error({ err: error }, 'Error no controlado');
 
   res.status(500).json({

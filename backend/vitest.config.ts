@@ -7,6 +7,7 @@ export default defineConfig({
     env: {
       NODE_ENV: 'test',
       DATABASE_URL: 'mysql://mis_gastos:mis_gastos@localhost:3306/mis_gastos',
+      ACCESS_TOKEN_SECRET: 'test-secret-that-is-at-least-32-characters-long',
     },
   },
 });

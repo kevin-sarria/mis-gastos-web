@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { GoogleButton } from '../components/google-button';
+import { RegisterForm } from '../components/register-form';
 
 export function RegisterPage() {
   return (
@@ -8,15 +9,24 @@ export function RegisterPage() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>Crear cuenta</CardTitle>
-          <CardDescription>Disponible en la Fase 2 (autenticación).</CardDescription>
+          <CardDescription>Empieza a poner tus finanzas en orden.</CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col gap-2">
-          <Button asChild>
-            <Link to="/login">Ya tengo una cuenta</Link>
-          </Button>
-          <Button asChild variant="ghost">
-            <Link to="/">Volver al inicio</Link>
-          </Button>
+        <CardContent className="space-y-4">
+          <RegisterForm />
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">o</span>
+            </div>
+          </div>
+          <GoogleButton />
+          <p className="text-center text-sm">
+            <Link to="/login" className="text-primary underline-offset-4 hover:underline">
+              Ya tengo una cuenta
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </div>

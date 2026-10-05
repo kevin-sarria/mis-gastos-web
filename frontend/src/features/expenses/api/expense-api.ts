@@ -1,0 +1,25 @@
+import { httpClient } from '@/core/http/client';
+import { mapExpense } from '../domain/expense';
+import type { Expense, ExpenseCreateInput, ExpenseDto } from '../domain/expense';
+
+export interface ExpenseApi {
+  list(): Promise<Expense[]>;
+  create(input: ExpenseCreateInput): Promise<Expense>;
+  remove(id: string): Promise<void>;
+}
+
+export const httpExpenseApi: ExpenseApi = {
+  async list() {
+    const { data } = await httpClient.get<{ expenses: ExpenseDto[] }>('/expenses');
+    return data.expenses.map((expense) => mapExpense(expense));
+  },
+
+  async create(input) {
+    const { data } = await httpClient.post<{ expense: ExpenseDto }>('/expenses', input);
+    return mapExpense(data.expense);
+  },
+
+  async remove(id) {
+    await httpClient.delete(`/expenses/${id}`);
+  },
+};

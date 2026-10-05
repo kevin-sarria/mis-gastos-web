@@ -40,3 +40,10 @@ export class ForbiddenError extends AppError {
     this.name = 'ForbiddenError';
   }
 }
+
+export class ConflictError extends AppError {
+  constructor(message = 'El recurso ya existe') {
+    super(409, 'CONFLICT', message);
+    this.name = 'ConflictError';
+  }
+}
