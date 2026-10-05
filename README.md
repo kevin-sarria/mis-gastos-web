@@ -17,7 +17,7 @@ Aplicación web responsive de gestión de finanzas personales, pensada para pers
 
 - Node.js >= 20
 - npm
-- Docker (opcional, para la base de datos en desarrollo)
+- XAMPP con MySQL/MariaDB iniciado (Apache no es necesario)
 
 ## Puesta en marcha (desarrollo)
 
@@ -25,10 +25,10 @@ Aplicación web responsive de gestión de finanzas personales, pensada para pers
 # 1. Instalar dependencias de ambos proyectos
 npm run install:all
 
-# 2. Levantar la base de datos (MariaDB en Docker)
-npm run db:up
+# 2. Inicia MySQL desde el panel de control de XAMPP (botón "Start" en MySQL)
 
-# 3. Copiar .env.example → .env en backend/ y frontend/ y ajustar valores
+# 3. Copiar .env.example → .env en backend/ y frontend/ y ajustar valores.
+#    DATABASE_URL usa por defecto root sin contraseña de XAMPP.
 
 # 4. Crear/migrar el esquema y sembrar datos base
 npm run db:migrate
