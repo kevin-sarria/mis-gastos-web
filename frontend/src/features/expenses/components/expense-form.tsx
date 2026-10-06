@@ -70,6 +70,7 @@ export function ExpenseForm({ onDone }: { onDone?: () => void }) {
 
       toast.success('Gasto registrado');
       form.reset();
+      form.clearErrors();
       setFile(null);
       onDone?.();
     } catch (error) {

@@ -1,4 +1,5 @@
 import { Receipt } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +20,7 @@ import { useExpenses } from '../hooks/use-expenses';
 export function ExpensesPage() {
   const { t } = useTranslation();
   const { data: expenses = [], isLoading } = useExpenses();
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -29,7 +31,7 @@ export function ExpensesPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <MonthSwitcher />
-          <Dialog>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button>Nuevo gasto</Button>
             </DialogTrigger>
@@ -38,7 +40,7 @@ export function ExpensesPage() {
                 <DialogTitle>Nuevo gasto</DialogTitle>
                 <DialogDescription>Anota un gasto de este mes y adjunta su factura.</DialogDescription>
               </DialogHeader>
-              <ExpenseForm />
+              <ExpenseForm onDone={() => setDialogOpen(false)} />
             </DialogContent>
           </Dialog>
         </div>

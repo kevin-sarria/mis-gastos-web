@@ -46,6 +46,7 @@ export function IncomeForm({ onDone }: { onDone?: () => void }) {
       });
       toast.success('Ingreso registrado');
       form.reset();
+      form.clearErrors();
       onDone?.();
     } catch (error) {
       toast.error(messageFromError(error));

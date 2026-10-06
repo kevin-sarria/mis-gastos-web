@@ -1,4 +1,5 @@
 import { Wallet } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +20,7 @@ import { useIncomes } from '../hooks/use-incomes';
 export function IncomesPage() {
   const { t } = useTranslation();
   const { data: incomes = [], isLoading } = useIncomes();
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -29,7 +31,7 @@ export function IncomesPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <MonthSwitcher />
-          <Dialog>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button>Nuevo ingreso</Button>
             </DialogTrigger>
@@ -38,7 +40,7 @@ export function IncomesPage() {
                 <DialogTitle>Nuevo ingreso</DialogTitle>
                 <DialogDescription>Registra una entrada de dinero de este mes.</DialogDescription>
               </DialogHeader>
-              <IncomeForm />
+              <IncomeForm onDone={() => setDialogOpen(false)} />
             </DialogContent>
           </Dialog>
         </div>

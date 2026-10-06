@@ -1,4 +1,5 @@
 import { PiggyBank } from 'lucide-react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,15 +19,16 @@ import { useBudgets } from '../hooks/use-budgets';
 export function BudgetsPage() {
   const { t } = useTranslation();
   const { data: budgets = [], isLoading } = useBudgets();
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{t('pages.budgets.title')}</h1>
           <p className="text-sm text-muted-foreground">{t('pages.budgets.description')}</p>
         </div>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button>Nuevo presupuesto</Button>
           </DialogTrigger>
@@ -35,7 +37,7 @@ export function BudgetsPage() {
               <DialogTitle>Nuevo presupuesto</DialogTitle>
               <DialogDescription>Define un límite por categoría o global.</DialogDescription>
             </DialogHeader>
-            <BudgetForm />
+            <BudgetForm onDone={() => setDialogOpen(false)} />
           </DialogContent>
         </Dialog>
       </div>

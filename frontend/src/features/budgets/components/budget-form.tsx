@@ -32,6 +32,7 @@ export function BudgetForm({ onDone }: { onDone?: () => void }) {
       });
       toast.success('Presupuesto creado');
       form.reset();
+      form.clearErrors();
       onDone?.();
     } catch (error) {
       toast.error(messageFromError(error));
