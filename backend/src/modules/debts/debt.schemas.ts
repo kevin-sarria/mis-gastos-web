@@ -53,6 +53,15 @@ export const payoffPlanSchema = z.object({
   extraMonthlyMinorUnits: z.number().int().nonnegative().default(0),
 });
 
+export const PLAN_STRATEGIES = ['AVALANCHE', 'SNOWBALL'] as const;
+
+export const planSaveSchema = z.object({
+  strategy: z.enum(PLAN_STRATEGIES),
+  extraMonthlyMinorUnits: z.number().int().nonnegative(),
+});
+
+export type PlanSaveInput = z.infer<typeof planSaveSchema>;
+
 export type DebtCreateInput = z.infer<typeof debtCreateSchema>;
 export type DebtUpdateInput = z.infer<typeof debtUpdateSchema>;
 export type PaymentCreateInput = z.infer<typeof paymentCreateSchema>;

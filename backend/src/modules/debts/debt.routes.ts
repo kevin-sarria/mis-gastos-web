@@ -9,6 +9,9 @@ debtRouter.use(requireAuth);
 // Rutas específicas antes de /:id
 debtRouter.post('/simulator', debtController.simulate);
 debtRouter.get('/payoff-plan', debtController.payoffPlan);
+debtRouter.get('/plan', debtController.getPlan);
+debtRouter.put('/plan', debtController.savePlan);
+debtRouter.delete('/plan', debtController.removePlan);
 
 debtRouter.get('/', debtController.list);
 debtRouter.post('/', debtController.create);

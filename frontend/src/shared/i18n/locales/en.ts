@@ -392,6 +392,23 @@ export const en: typeof es = {
         balance: 'Balance',
       },
     },
+    planCard: {
+      title: 'Your plan for the month',
+      noPlanTitle: 'You have no active plan yet',
+      noPlanDescription:
+        'Choose a strategy and how much you can add. The app will tell you each month exactly what to pay on each debt.',
+      activate: 'Activate plan',
+      saved: 'Plan activated',
+      activeStrategy: '{{strategy}} · adding {{amount}} extra',
+      change: 'Change',
+      deactivate: 'Deactivate',
+      progress: 'You have made {{done}} of {{total}} payments this month',
+      remaining: 'Still to pay this month',
+      planned: 'Pay {{amount}}',
+      paid: 'paid {{amount}}',
+      markPaid: 'Mark as paid',
+      paidLabel: 'Paid',
+    },
     plan: {
       title: 'Payoff plan',
       description: 'Here you can see how to clear your debts sooner and paying less.',

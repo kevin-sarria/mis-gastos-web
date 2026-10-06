@@ -1,4 +1,6 @@
 import { httpClient } from '@/core/http/client';
+import type { MonthlyPlan } from '../hooks/use-debt-plan';
+import type { PayoffStrategy } from '../domain/plan';
 import type {
   Debt,
   DebtCreateInput,
@@ -28,6 +30,12 @@ export interface DebtApi {
   addPayment(id: string, input: PaymentInput): Promise<Debt>;
   simulate(input: SimulatorInput): Promise<SimulationResult>;
   payoffPlan(extraMinorUnits: number): Promise<PayoffPlan>;
+  getPlan(): Promise<MonthlyPlan | null>;
+  savePlan(input: {
+    strategy: PayoffStrategy;
+    extraMonthlyMinorUnits: number;
+  }): Promise<MonthlyPlan | null>;
+  removePlan(): Promise<void>;
 }
 
 export const httpDebtApi: DebtApi = {
@@ -68,5 +76,19 @@ export const httpDebtApi: DebtApi = {
       params: { extra: extraMinorUnits },
     });
     return data;
+  },
+
+  async getPlan() {
+    const { data } = await httpClient.get<{ plan: MonthlyPlan | null }>('/debts/plan');
+    return data.plan;
+  },
+
+  async savePlan(input) {
+    const { data } = await httpClient.put<{ plan: MonthlyPlan | null }>('/debts/plan', input);
+    return data.plan;
+  },
+
+  async removePlan() {
+    await httpClient.delete('/debts/plan');
   },
 };

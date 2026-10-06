@@ -390,6 +390,23 @@ export const es = {
         balance: 'Saldo',
       },
     },
+    planCard: {
+      title: 'Tu plan del mes',
+      noPlanTitle: 'Todavía no tienes un plan activo',
+      noPlanDescription:
+        'Elige una estrategia y cuánto puedes aportar. La app te dirá cada mes exactamente qué pagar a cada deuda.',
+      activate: 'Activar plan',
+      saved: 'Plan activado',
+      activeStrategy: '{{strategy}} · aportando {{amount}} extra',
+      change: 'Cambiar',
+      deactivate: 'Desactivar',
+      progress: 'Llevas {{done}} de {{total}} pagos este mes',
+      remaining: 'Te queda por pagar este mes',
+      planned: 'Toca pagar {{amount}}',
+      paid: 'pagado {{amount}}',
+      markPaid: 'Marcar pagado',
+      paidLabel: 'Pagado',
+    },
     plan: {
       title: 'Plan de liquidación',
       description: 'Aquí ves cómo salir de tus deudas antes y pagando menos.',

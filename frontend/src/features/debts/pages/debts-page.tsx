@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { formatMoneyLocale } from '@/shared/lib/format';
 import { DebtForm } from '../components/debt-form';
 import { DebtList } from '../components/debt-list';
+import { MonthlyPlanCard } from '../components/monthly-plan';
 import { DebtSimulator } from '../components/debt-simulator';
 import { PayoffPlanView } from '../components/payoff-plan';
 import { formatRate } from '../domain/debt';
@@ -104,6 +105,7 @@ export function DebtsPage() {
           />
         ) : (
           <div className="space-y-4">
+            <MonthlyPlanCard />
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <SummaryCard
                 label={t('debts.totalBalance')}

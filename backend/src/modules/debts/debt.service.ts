@@ -1,5 +1,7 @@
 import type { Debt } from '@prisma/client';
+import { prisma } from '../../lib/prisma';
 import { NotFoundError } from '../../shared/errors/app-error';
+import { currentMonthRange } from '../../shared/utils/finance';
 import {
   buildSchedule,
   simulateByPayment,
@@ -16,6 +18,7 @@ import type {
   DebtUpdateInput,
   PaymentCreateInput,
   PayoffPlanInput,
+  PlanSaveInput,
   SimulatorInput,
 } from './debt.schemas';
 
@@ -182,5 +185,83 @@ export const debtService = {
       ),
       monthsSavedVsMinimums: Math.max(minimumsOnly.months - avalanche.months, 0),
     };
+  },
+
+  // ============================================================
+  // Plan activo: se guarda la decisión (estrategia + aporte) y el
+  // "qué pagar este mes" se recalcula desde el saldo real.
+  // ============================================================
+
+  async currentMonthPlan(userId: string) {
+    const [plan, debts] = await Promise.all([
+      prisma.debtPlan.findUnique({ where: { userId } }),
+      debtRepository.list(userId),
+    ]);
+
+    if (!plan?.isActive) {
+      return null;
+    }
+
+    const active = activeDebts(debts);
+    const simulation = simulatePayoff(active, plan.extraMonthlyMinorUnits, plan.strategy);
+    const firstMonth = simulation.schedule[0];
+
+    // Lo que ya pagaste este mes, leído de los pagos registrados.
+    const { start, end } = currentMonthRange();
+    const paidByDebt = new Map<string, number>();
+    for (const debt of debts) {
+      for (const payment of debt.payments) {
+        if (payment.date >= start && payment.date < end) {
+          paidByDebt.set(debt.id, (paidByDebt.get(debt.id) ?? 0) + payment.amountMinorUnits);
+        }
+      }
+    }
+
+    const items = (firstMonth?.payments ?? []).map((payment) => {
+      const paid = paidByDebt.get(payment.id) ?? 0;
+      return {
+        debtId: payment.id,
+        name: payment.name,
+        plannedMinorUnits: payment.amountMinorUnits,
+        paidMinorUnits: paid,
+        isPaid: paid >= payment.amountMinorUnits,
+      };
+    });
+
+    return {
+      strategy: plan.strategy,
+      extraMonthlyMinorUnits: plan.extraMonthlyMinorUnits,
+      startedAt: plan.startedAt,
+      items,
+      plannedTotalMinorUnits: items.reduce((sum, item) => sum + item.plannedMinorUnits, 0),
+      paidTotalMinorUnits: items.reduce((sum, item) => sum + item.paidMinorUnits, 0),
+      monthsToFreedom: simulation.months,
+      totalInterestMinorUnits: simulation.totalInterestMinorUnits,
+      totalBalanceMinorUnits: active.reduce((sum, debt) => sum + debt.balanceMinorUnits, 0),
+    };
+  },
+
+  async savePlan(userId: string, input: PlanSaveInput) {
+    await prisma.debtPlan.upsert({
+      where: { userId },
+      create: {
+        userId,
+        strategy: input.strategy,
+        extraMonthlyMinorUnits: input.extraMonthlyMinorUnits,
+        startedAt: new Date(),
+        isActive: true,
+      },
+      update: {
+        strategy: input.strategy,
+        extraMonthlyMinorUnits: input.extraMonthlyMinorUnits,
+        isActive: true,
+      },
+    });
+
+    return this.currentMonthPlan(userId);
+  },
+
+  async deletePlan(userId: string) {
+    await prisma.debtPlan.updateMany({ where: { userId }, data: { isActive: false } });
   },
 };

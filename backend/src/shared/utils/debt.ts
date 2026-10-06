@@ -173,11 +173,19 @@ export interface PayoffOrderEntry {
   monthPaidOff: number;
 }
 
+export interface PayoffPayment {
+  id: string;
+  name: string;
+  amountMinorUnits: number;
+}
+
 export interface PayoffMonth {
   period: number;
   totalPaymentMinorUnits: number;
   totalInterestMinorUnits: number;
   totalBalanceMinorUnits: number;
+  /** A qué deuda va cada peso de este mes. */
+  payments: PayoffPayment[];
 }
 
 export interface PayoffResult {
@@ -242,6 +250,10 @@ export function simulatePayoff(
     const alive = state.filter((debt) => debt.balance > 0);
     let budget = alive.reduce((sum, debt) => sum + debt.minimum, 0) + extraMonthlyMinorUnits;
     let monthPaid = 0;
+    const payments = new Map<string, number>();
+    const registerPayment = (id: string, amount: number) => {
+      payments.set(id, (payments.get(id) ?? 0) + amount);
+    };
 
     // 3. Cuotas mínimas
     for (const debt of state) {
@@ -250,6 +262,7 @@ export function simulatePayoff(
       debt.balance -= pay;
       budget -= pay;
       monthPaid += pay;
+      registerPayment(debt.id, pay);
     }
 
     // 4. El excedente va a la deuda prioritaria, y de ahí a la siguiente
@@ -267,6 +280,7 @@ export function simulatePayoff(
       debt.balance -= pay;
       budget -= pay;
       monthPaid += pay;
+      registerPayment(debt.id, pay);
     }
 
     // 5. Registrar deudas liquidadas
@@ -284,6 +298,11 @@ export function simulatePayoff(
       totalPaymentMinorUnits: monthPaid,
       totalInterestMinorUnits: monthInterest,
       totalBalanceMinorUnits: state.reduce((sum, debt) => sum + Math.max(debt.balance, 0), 0),
+      payments: [...payments.entries()].map(([id, amountMinorUnits]) => ({
+        id,
+        name: state.find((debt) => debt.id === id)?.name ?? '',
+        amountMinorUnits,
+      })),
     });
   }
 

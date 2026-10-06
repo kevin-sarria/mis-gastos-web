@@ -4,6 +4,7 @@ import {
   debtUpdateSchema,
   payoffPlanSchema,
   paymentCreateSchema,
+  planSaveSchema,
   simulatorSchema,
 } from './debt.schemas';
 import { debtService } from './debt.service';
@@ -53,5 +54,21 @@ export const debtController = {
     });
     const plan = await debtService.payoffPlan(req.user?.userId ?? '', input);
     res.json(plan);
+  }),
+
+  getPlan: asyncHandler(async (req, res) => {
+    const plan = await debtService.currentMonthPlan(req.user?.userId ?? '');
+    res.json({ plan });
+  }),
+
+  savePlan: asyncHandler(async (req, res) => {
+    const input = planSaveSchema.parse(req.body);
+    const plan = await debtService.savePlan(req.user?.userId ?? '', input);
+    res.json({ plan });
+  }),
+
+  removePlan: asyncHandler(async (req, res) => {
+    await debtService.deletePlan(req.user?.userId ?? '');
+    res.status(204).send();
   }),
 };
