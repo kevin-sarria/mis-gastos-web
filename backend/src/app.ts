@@ -13,6 +13,7 @@ import { budgetRouter } from './modules/budgets/budget.routes';
 import { categoryRouter } from './modules/categories/category.routes';
 import { currencyRouter } from './modules/currencies/currency.routes';
 import { dashboardRouter } from './modules/dashboard/dashboard.routes';
+import { debtRouter } from './modules/debts/debt.routes';
 import { expenseRouter } from './modules/expenses/expense.routes';
 import { fileRouter } from './modules/files/file.routes';
 import { healthRouter } from './modules/health/health.routes';
@@ -61,6 +62,7 @@ app.use('/api/v1/budgets', budgetRouter);
 app.use('/api/v1/alerts', alertRouter);
 app.use('/api/v1/dashboard', dashboardRouter);
 app.use('/api/v1/insights', insightsRouter);
+app.use('/api/v1/debts', debtRouter);
 
 // 404 y errores
 app.use(notFoundHandler);

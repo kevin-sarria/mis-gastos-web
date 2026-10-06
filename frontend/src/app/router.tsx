@@ -6,6 +6,7 @@ import { RegisterPage } from '@/features/auth/pages/register-page';
 import { ResetPasswordPage } from '@/features/auth/pages/reset-password-page';
 import { BudgetsPage } from '@/features/budgets/pages/budgets-page';
 import { DashboardPage } from '@/features/dashboard/pages/dashboard-page';
+import { DebtsPage } from '@/features/debts/pages/debts-page';
 import { ExpensesPage } from '@/features/expenses/pages/expenses-page';
 import { IncomesPage } from '@/features/incomes/pages/incomes-page';
 import { InsightsPage } from '@/features/insights/pages/insights-page';
@@ -26,6 +27,7 @@ export const router = createBrowserRouter([
       { path: 'ingresos', element: <IncomesPage /> },
       { path: 'gastos', element: <ExpensesPage /> },
       { path: 'presupuestos', element: <BudgetsPage /> },
+      { path: 'deudas', element: <DebtsPage /> },
       { path: 'progreso', element: <InsightsPage /> },
       { path: 'ajustes', element: <SettingsPage /> },
     ],
