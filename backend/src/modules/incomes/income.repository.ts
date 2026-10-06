@@ -1,10 +1,11 @@
 import { prisma } from '../../lib/prisma';
+import type { MonthRange } from '../../shared/utils/finance';
 import type { IncomeCreateInput, IncomeUpdateInput } from './income.schemas';
 
 export const incomeRepository = {
-  list(userId: string) {
+  list(userId: string, range: MonthRange) {
     return prisma.income.findMany({
-      where: { userId },
+      where: { userId, date: { gte: range.start, lt: range.end } },
       include: { category: true },
       orderBy: { date: 'desc' },
     });

@@ -4,13 +4,6 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/features/auth/store/auth-context';
 import { CategorySelect } from '@/features/categories/components/category-select';
@@ -18,14 +11,6 @@ import { CurrencyInput } from '@/shared/components/currency-input';
 import { messageFromError } from '@/shared/lib/error-message';
 import { useCreateIncome } from '../hooks/use-incomes';
 import { incomeFormSchema, type IncomeFormValues } from '../schemas/income-form.schema';
-
-const FREQUENCIES = [
-  { value: 'ONE_TIME', label: 'Única' },
-  { value: 'MONTHLY', label: 'Mensual' },
-  { value: 'WEEKLY', label: 'Semanal' },
-  { value: 'DAILY', label: 'Diaria' },
-  { value: 'YEARLY', label: 'Anual' },
-];
 
 function todayInputValue(): string {
   const now = new Date();
@@ -45,7 +30,6 @@ export function IncomeForm({ onDone }: { onDone?: () => void }) {
       categoryId: '',
       title: '',
       amount: '',
-      frequency: 'MONTHLY',
       date: todayInputValue(),
       note: '',
     },
@@ -57,7 +41,6 @@ export function IncomeForm({ onDone }: { onDone?: () => void }) {
         categoryId: values.categoryId,
         title: values.title,
         amountMinorUnits: Number(values.amount),
-        frequency: values.frequency,
         date: new Date(values.date).toISOString(),
         note: values.note || null,
       });
@@ -110,29 +93,6 @@ export function IncomeForm({ onDone }: { onDone?: () => void }) {
         {form.formState.errors.categoryId ? (
           <p className="text-sm text-destructive">{form.formState.errors.categoryId.message}</p>
         ) : null}
-      </div>
-
-      <div className="space-y-2">
-        <Label>Frecuencia</Label>
-        <Select
-          value={form.watch('frequency')}
-          onValueChange={(value) =>
-            form.setValue('frequency', value as IncomeFormValues['frequency'], {
-              shouldValidate: true,
-            })
-          }
-        >
-          <SelectTrigger id="frequency" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent position="popper" sideOffset={4}>
-            {FREQUENCIES.map((frequency) => (
-              <SelectItem key={frequency.value} value={frequency.value}>
-                {frequency.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       <div className="space-y-2">

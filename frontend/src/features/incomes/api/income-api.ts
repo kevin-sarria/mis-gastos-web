@@ -2,14 +2,16 @@ import { httpClient } from '@/core/http/client';
 import type { Income, IncomeCreateInput } from '../domain/income';
 
 export interface IncomeApi {
-  list(): Promise<Income[]>;
+  list(month: string): Promise<Income[]>;
   create(input: IncomeCreateInput): Promise<Income>;
   remove(id: string): Promise<void>;
 }
 
 export const httpIncomeApi: IncomeApi = {
-  async list() {
-    const { data } = await httpClient.get<{ incomes: Income[] }>('/incomes');
+  async list(month) {
+    const { data } = await httpClient.get<{ incomes: Income[] }>('/incomes', {
+      params: { month },
+    });
     return data.incomes;
   },
 

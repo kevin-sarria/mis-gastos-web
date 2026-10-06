@@ -1,16 +1,11 @@
 import { prisma } from '../../lib/prisma';
 import {
-  currentMonthRange,
+  formatMonthKey,
   groupByCategory,
-  isRecurringIncomeActiveInMonth,
-  previousMonthRange,
+  previousMonthOf,
   sumAmounts,
 } from '../../shared/utils/finance';
 import type { MonthRange } from '../../shared/utils/finance';
-
-function formatMonth(range: MonthRange): string {
-  return `${range.start.getFullYear()}-${String(range.start.getMonth() + 1).padStart(2, '0')}`;
-}
 
 function ratioChange(previous: number, current: number): number | null {
   if (previous <= 0) {
@@ -20,53 +15,49 @@ function ratioChange(previous: number, current: number): number | null {
 }
 
 export const dashboardService = {
-  async getSummary(userId: string) {
-    const range = currentMonthRange();
-    const previous = previousMonthRange();
+  async getSummary(userId: string, range: MonthRange) {
+    const previous = previousMonthOf(range);
 
-    const [incomes, expenses, activeAlerts] = await Promise.all([
-      prisma.income.findMany({ where: { userId }, include: { category: true } }),
-      prisma.expense.findMany({ where: { userId }, include: { category: true, tags: true } }),
+    const [incomes, expenses, previousIncome, previousExpenses, activeAlerts] = await Promise.all([
+      prisma.income.findMany({
+        where: { userId, date: { gte: range.start, lt: range.end } },
+      }),
+      prisma.expense.findMany({
+        where: { userId, date: { gte: range.start, lt: range.end } },
+        include: { category: true },
+      }),
+      prisma.income.aggregate({
+        where: { userId, date: { gte: previous.start, lt: previous.end } },
+        _sum: { amountMinorUnits: true },
+      }),
+      prisma.expense.aggregate({
+        where: { userId, date: { gte: previous.start, lt: previous.end } },
+        _sum: { amountMinorUnits: true },
+      }),
       prisma.alert.count({ where: { userId, readAt: null } }),
     ]);
 
-    const monthlyIncomes = incomes.filter((income) =>
-      isRecurringIncomeActiveInMonth(income.frequency, income.date, range),
-    );
-    const monthlyExpenses = expenses.filter(
-      (expense) => expense.date >= range.start && expense.date < range.end,
-    );
-
-    const totalIncome = sumAmounts(monthlyIncomes);
-    const totalExpenses = sumAmounts(monthlyExpenses);
+    const totalIncome = sumAmounts(incomes);
+    const totalExpenses = sumAmounts(expenses);
 
     const topCategories = groupByCategory(
-      monthlyExpenses.map((expense) => ({
+      expenses.map((expense) => ({
         categoryId: expense.categoryId,
         categoryName: expense.category?.name ?? 'Sin categoría',
         amountMinorUnits: expense.amountMinorUnits,
       })),
     ).slice(0, 5);
 
-    const previousIncomeTotal = sumAmounts(
-      incomes.filter((income) =>
-        isRecurringIncomeActiveInMonth(income.frequency, income.date, previous),
-      ),
-    );
-    const previousExpensesTotal = sumAmounts(
-      expenses.filter((expense) => expense.date >= previous.start && expense.date < previous.end),
-    );
-
     return {
-      month: formatMonth(range),
+      month: formatMonthKey(range),
       totalIncome,
       totalExpenses,
       balance: totalIncome - totalExpenses,
       topCategories,
       activeAlerts,
       trends: {
-        income: ratioChange(previousIncomeTotal, totalIncome),
-        expenses: ratioChange(previousExpensesTotal, totalExpenses),
+        income: ratioChange(previousIncome._sum.amountMinorUnits ?? 0, totalIncome),
+        expenses: ratioChange(previousExpenses._sum.amountMinorUnits ?? 0, totalExpenses),
       },
     };
   },

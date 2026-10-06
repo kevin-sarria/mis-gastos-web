@@ -3,14 +3,16 @@ import { mapExpense } from '../domain/expense';
 import type { Expense, ExpenseCreateInput, ExpenseDto } from '../domain/expense';
 
 export interface ExpenseApi {
-  list(): Promise<Expense[]>;
+  list(month: string): Promise<Expense[]>;
   create(input: ExpenseCreateInput): Promise<Expense>;
   remove(id: string): Promise<void>;
 }
 
 export const httpExpenseApi: ExpenseApi = {
-  async list() {
-    const { data } = await httpClient.get<{ expenses: ExpenseDto[] }>('/expenses');
+  async list(month) {
+    const { data } = await httpClient.get<{ expenses: ExpenseDto[] }>('/expenses', {
+      params: { month },
+    });
     return data.expenses.map((expense) => mapExpense(expense));
   },
 

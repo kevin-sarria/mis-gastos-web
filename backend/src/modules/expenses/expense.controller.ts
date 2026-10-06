@@ -1,11 +1,13 @@
+import { formatMonthKey, monthRangeFromQuery } from '../../shared/utils/finance';
 import { asyncHandler } from '../../shared/utils/async-handler';
 import { expenseCreateSchema, expenseUpdateSchema } from './expense.schemas';
 import { expenseService } from './expense.service';
 
 export const expenseController = {
   list: asyncHandler(async (req, res) => {
-    const expenses = await expenseService.list(req.user?.userId ?? '');
-    res.json({ expenses });
+    const range = monthRangeFromQuery(req.query.month);
+    const expenses = await expenseService.list(req.user?.userId ?? '', range);
+    res.json({ month: formatMonthKey(range), expenses });
   }),
 
   create: asyncHandler(async (req, res) => {

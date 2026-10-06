@@ -1,12 +1,13 @@
 import { prisma } from '../../lib/prisma';
+import type { MonthRange } from '../../shared/utils/finance';
 import type { ExpenseCreateInput, ExpenseUpdateInput } from './expense.schemas';
 
 const include = { category: true, tags: true, attachments: true } as const;
 
 export const expenseRepository = {
-  list(userId: string) {
+  list(userId: string, range: MonthRange) {
     return prisma.expense.findMany({
-      where: { userId },
+      where: { userId, date: { gte: range.start, lt: range.end } },
       include,
       orderBy: { date: 'desc' },
     });

@@ -1,46 +1,39 @@
 import { prisma } from '../../lib/prisma';
 import {
-  currentMonthRange,
+  formatMonthKey,
   groupByCategory,
-  isRecurringIncomeActiveInMonth,
-  previousMonthRange,
+  previousMonthOf,
   sumAmounts,
 } from '../../shared/utils/finance';
 import type { MonthRange } from '../../shared/utils/finance';
 import { detectCuttableExpenses, generateInsights } from './insights.engine';
 
-function formatMonth(range: MonthRange): string {
-  return `${range.start.getFullYear()}-${String(range.start.getMonth() + 1).padStart(2, '0')}`;
-}
-
 export const insightsService = {
-  async getForUser(userId: string) {
-    const range = currentMonthRange();
-    const previous = previousMonthRange();
+  async getForUser(userId: string, range: MonthRange) {
+    const previous = previousMonthOf(range);
 
-    const [incomes, expenses] = await Promise.all([
-      prisma.income.findMany({ where: { userId }, include: { category: true } }),
-      prisma.expense.findMany({ where: { userId }, include: { category: true, tags: true } }),
+    const [incomes, expenses, previousExpenses] = await Promise.all([
+      prisma.income.findMany({
+        where: { userId, date: { gte: range.start, lt: range.end } },
+      }),
+      prisma.expense.findMany({
+        where: { userId, date: { gte: range.start, lt: range.end } },
+        include: { category: true, tags: true },
+      }),
+      prisma.expense.aggregate({
+        where: { userId, date: { gte: previous.start, lt: previous.end } },
+        _sum: { amountMinorUnits: true },
+      }),
     ]);
 
-    const monthlyIncomes = incomes.filter((income) =>
-      isRecurringIncomeActiveInMonth(income.frequency, income.date, range),
-    );
-    const monthlyExpenses = expenses.filter(
-      (expense) => expense.date >= range.start && expense.date < range.end,
-    );
-    const previousExpenses = expenses.filter(
-      (expense) => expense.date >= previous.start && expense.date < previous.end,
-    );
-
-    const totalIncome = sumAmounts(monthlyIncomes);
-    const totalExpenses = sumAmounts(monthlyExpenses);
+    const totalIncome = sumAmounts(incomes);
+    const totalExpenses = sumAmounts(expenses);
     const antExpenseTotal = sumAmounts(
-      monthlyExpenses.filter((expense) => expense.tags.some((t) => t.tag === 'ANT_EXPENSE')),
+      expenses.filter((expense) => expense.tags.some((tag) => tag.tag === 'ANT_EXPENSE')),
     );
 
     const topCategory = groupByCategory(
-      monthlyExpenses.map((expense) => ({
+      expenses.map((expense) => ({
         categoryId: expense.categoryId,
         categoryName: expense.category?.name ?? 'Sin categoría',
         amountMinorUnits: expense.amountMinorUnits,
@@ -54,21 +47,21 @@ export const insightsService = {
       totalExpenses,
       antExpenseTotal,
       currentExpenses: totalExpenses,
-      previousExpenses: sumAmounts(previousExpenses),
+      previousExpenses: previousExpenses._sum.amountMinorUnits ?? 0,
       topCategory: topCategory ? { name: topCategory.name, total: topCategory.total } : undefined,
       monthsTracked,
     });
 
     const cuttableExpenses = detectCuttableExpenses(
-      monthlyExpenses.map((expense) => ({
+      expenses.map((expense) => ({
         title: expense.title,
         categoryName: expense.category?.name ?? 'Sin categoría',
-        tags: expense.tags.map((t) => t.tag),
+        tags: expense.tags.map((tag) => tag.tag),
         amountMinorUnits: expense.amountMinorUnits,
       })),
     );
 
-    return { month: formatMonth(range), insights, cuttableExpenses };
+    return { month: formatMonthKey(range), insights, cuttableExpenses };
   },
 
   async countMonthsTracked(userId: string): Promise<number> {

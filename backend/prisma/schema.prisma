@@ -21,14 +21,6 @@ enum CategoryType {
   EXPENSE
 }
 
-enum Frequency {
-  ONE_TIME
-  DAILY
-  WEEKLY
-  MONTHLY
-  YEARLY
-}
-
 // Etiquetas de gasto. Se modelan como tabla de unión porque MySQL
 // no admite listas escalares en Prisma.
 enum ExpenseTagType {
@@ -160,8 +152,7 @@ model Income {
   categoryId       String
   title            String
   amountMinorUnits Int // en unidades menores de la moneda del usuario
-  frequency        Frequency @default(MONTHLY)
-  date             DateTime // fecha del ingreso / primer vencimiento
+  date             DateTime // fecha del ingreso (pertenece a ese mes)
   note             String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt

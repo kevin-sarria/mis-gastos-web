@@ -1,10 +1,11 @@
 import { NotFoundError } from '../../shared/errors/app-error';
+import type { MonthRange } from '../../shared/utils/finance';
 import { incomeRepository } from './income.repository';
 import type { IncomeCreateInput, IncomeUpdateInput } from './income.schemas';
 
 export const incomeService = {
-  list(userId: string) {
-    return incomeRepository.list(userId);
+  list(userId: string, range: MonthRange) {
+    return incomeRepository.list(userId, range);
   },
 
   create(userId: string, input: IncomeCreateInput) {

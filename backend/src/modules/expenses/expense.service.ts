@@ -1,11 +1,12 @@
 import { NotFoundError } from '../../shared/errors/app-error';
+import type { MonthRange } from '../../shared/utils/finance';
 import { alertService } from '../alerts/alert.service';
 import { expenseRepository } from './expense.repository';
 import type { ExpenseCreateInput, ExpenseUpdateInput } from './expense.schemas';
 
 export const expenseService = {
-  list(userId: string) {
-    return expenseRepository.list(userId);
+  list(userId: string, range: MonthRange) {
+    return expenseRepository.list(userId, range);
   },
 
   async create(userId: string, input: ExpenseCreateInput) {
