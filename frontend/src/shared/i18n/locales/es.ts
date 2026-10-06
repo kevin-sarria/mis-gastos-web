@@ -8,7 +8,7 @@ export const es = {
     incomes: 'Ingresos',
     expenses: 'Gastos',
     budgets: 'Presupuestos',
-    insights: 'Insights',
+    insights: 'Mi progreso',
     settings: 'Ajustes',
   },
   theme: {
@@ -37,8 +37,8 @@ export const es = {
       description: 'Define límites por categoría y recibe alertas.',
     },
     insights: {
-      title: 'Insights',
-      description: 'Comparativas, gastos recortables y tu plan financiero.',
+      title: 'Mi progreso',
+      description: 'Comparación con el mes anterior y observaciones de tus datos.',
     },
     settings: {
       title: 'Ajustes',

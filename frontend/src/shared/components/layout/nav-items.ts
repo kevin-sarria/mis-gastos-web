@@ -19,6 +19,6 @@ export const navItems: NavItem[] = [
   { to: '/ingresos', labelKey: 'nav.incomes', icon: Wallet },
   { to: '/gastos', labelKey: 'nav.expenses', icon: Receipt },
   { to: '/presupuestos', labelKey: 'nav.budgets', icon: PiggyBank },
-  { to: '/insights', labelKey: 'nav.insights', icon: TrendingUp },
+  { to: '/progreso', labelKey: 'nav.insights', icon: TrendingUp },
   { to: '/ajustes', labelKey: 'nav.settings', icon: Settings },
 ];

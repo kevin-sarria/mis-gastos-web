@@ -26,7 +26,7 @@ export const router = createBrowserRouter([
       { path: 'ingresos', element: <IncomesPage /> },
       { path: 'gastos', element: <ExpensesPage /> },
       { path: 'presupuestos', element: <BudgetsPage /> },
-      { path: 'insights', element: <InsightsPage /> },
+      { path: 'progreso', element: <InsightsPage /> },
       { path: 'ajustes', element: <SettingsPage /> },
     ],
   },

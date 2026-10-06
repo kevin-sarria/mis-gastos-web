@@ -9,8 +9,8 @@ import { useInsights } from '../hooks/use-insights';
 
 const TYPE_STYLES: Record<InsightType, { label: string; className: string }> = {
   WARNING: { label: 'Atención', className: 'bg-destructive/10 text-destructive' },
-  OPPORTUNITY: { label: 'Oportunidad', className: 'bg-amber-500/10 text-amber-600' },
-  SUCCESS: { label: 'Buen hábito', className: 'bg-emerald-500/10 text-emerald-600' },
+  OPPORTUNITY: { label: 'Por revisar', className: 'bg-amber-500/10 text-amber-600' },
+  SUCCESS: { label: 'Positivo', className: 'bg-emerald-500/10 text-emerald-600' },
 };
 
 export function InsightsPage() {
@@ -34,12 +34,12 @@ export function InsightsPage() {
         <div className="grid gap-4 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Sugerencias para tu estabilidad</CardTitle>
+              <CardTitle>Observaciones del mes</CardTitle>
             </CardHeader>
             <CardContent>
               {data.insights.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  Registra ingresos y gastos de este mes para recibir sugerencias.
+                  Todavía no hay nada que observar este mes.
                 </p>
               ) : (
                 <ul className="space-y-4">
@@ -59,12 +59,12 @@ export function InsightsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Gastos recortables</CardTitle>
+              <CardTitle>Gastos que podrías revisar</CardTitle>
             </CardHeader>
             <CardContent>
               {data.cuttableExpenses.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  No detectamos gastos recortables este mes.
+                  No hay gastos no esenciales registrados este mes.
                 </p>
               ) : (
                 <ul className="space-y-3">

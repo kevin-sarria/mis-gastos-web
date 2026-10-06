@@ -23,22 +23,22 @@ export function generateInsights(metrics: InsightMetrics): Insight[] {
     if (metrics.totalExpenses > metrics.totalIncome) {
       insights.push({
         type: 'WARNING',
-        title: 'Gastas más de lo que ingresas',
-        description: 'Este mes tus gastos superan tus ingresos. Revisa los gastos variables y hormiga.',
+        title: 'Gastaste más de lo que ingresaste',
+        description: 'Este mes los gastos superan a los ingresos registrados.',
       });
     } else {
       const savingsRate = (metrics.totalIncome - metrics.totalExpenses) / metrics.totalIncome;
       if (savingsRate >= 0.2) {
         insights.push({
           type: 'SUCCESS',
-          title: 'Buen hábito de ahorro',
-          description: `Estás ahorrando cerca del ${Math.round(savingsRate * 100)}% de tus ingresos.`,
+          title: `Margen de ahorro del ${Math.round(savingsRate * 100)}%`,
+          description: 'Te quedó sin gastar cerca de ese porcentaje de tus ingresos.',
         });
       } else if (savingsRate < 0.05) {
         insights.push({
           type: 'WARNING',
-          title: 'Margen de ahorro bajo',
-          description: 'Te queda poco margen al final del mes. Intenta recortar lo no esencial.',
+          title: 'Margen ajustado',
+          description: 'Te quedó sin gastar menos del 5% de tus ingresos.',
         });
       }
     }
@@ -47,32 +47,32 @@ export function generateInsights(metrics: InsightMetrics): Insight[] {
   if (metrics.previousExpenses > 0 && metrics.currentExpenses > metrics.previousExpenses * 1.2) {
     insights.push({
       type: 'WARNING',
-      title: 'Gasto anómalo detectado',
-      description: 'Tus gastos subieron más de un 20% frente al mes anterior.',
+      title: 'Subida respecto al mes anterior',
+      description: 'Los gastos subieron más de un 20% frente al mes anterior.',
     });
   }
 
   if (metrics.antExpenseTotal > 0) {
     insights.push({
       type: 'OPPORTUNITY',
-      title: 'Gastos hormiga',
-      description: 'Tienes gastos hormiga que podrías reducir sin afectar lo esencial.',
+      title: 'Gastos hormiga registrados',
+      description: 'Son pequeños, pero si se repiten acaban pesando en el mes.',
     });
   }
 
   if (metrics.topCategory && metrics.topCategory.total > 0) {
     insights.push({
       type: 'OPPORTUNITY',
-      title: `Tu mayor gasto: ${metrics.topCategory.name}`,
-      description: 'Revisa si puedes recortar en esta categoría.',
+      title: `Tu mayor categoría: ${metrics.topCategory.name}`,
+      description: 'Es donde más se concentró tu gasto del mes.',
     });
   }
 
   if (metrics.monthsTracked === 1) {
     insights.push({
       type: 'SUCCESS',
-      title: 'Primer mes registrado',
-      description: 'Con más meses podrás ver tendencias y comparativas.',
+      title: 'Sin comparación todavía',
+      description: 'Con más de un mes registrado podrás comparar mes a mes.',
     });
   }
 
@@ -108,6 +108,6 @@ export function detectCuttableExpenses(
       title: expense.title,
       categoryName: expense.categoryName,
       amountMinorUnits: expense.amountMinorUnits,
-      reason: expense.tags.includes('ANT_EXPENSE') ? 'Gasto hormiga' : 'Categoría no esencial',
+      reason: expense.tags.includes('ANT_EXPENSE') ? 'Gasto hormiga' : 'No esencial',
     }));
 }
