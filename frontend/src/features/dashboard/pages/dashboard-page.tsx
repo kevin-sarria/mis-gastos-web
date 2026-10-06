@@ -7,6 +7,7 @@ import { useAuth } from '@/features/auth/store/auth-context';
 import { cn } from '@/lib/utils';
 import { MonthSwitcher } from '@/shared/components/month-switcher';
 import { formatMoneyLocale } from '@/shared/lib/format';
+import type { MoneyCurrency } from '@/shared/lib/money';
 import { useDashboard } from '../hooks/use-dashboard';
 
 interface StatCardProps {
@@ -60,6 +61,23 @@ function StatCard({ title, value, icon: Icon, trend, highlight }: StatCardProps)
   );
 }
 
+function Line({
+  label,
+  amount,
+  currency,
+}: {
+  label: string;
+  amount: number;
+  currency: MoneyCurrency | null | undefined;
+}) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="tabular font-medium">{formatMoneyLocale(amount, currency)}</span>
+    </div>
+  );
+}
+
 export function DashboardPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -109,6 +127,57 @@ export function DashboardPage() {
               icon={AlertTriangle}
             />
           </div>
+
+          {summary.isCurrentMonth && summary.debts.paymentsMinorUnits > 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('dashboard.withDebts')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Line
+                  label={t('dashboard.lineIncome')}
+                  amount={summary.totalIncome}
+                  currency={currency}
+                />
+                <Line
+                  label={t('dashboard.lineExpenses')}
+                  amount={-summary.totalExpenses}
+                  currency={currency}
+                />
+                <Line
+                  label={t('dashboard.lineDebts')}
+                  amount={-summary.debts.paymentsMinorUnits}
+                  currency={currency}
+                />
+                <div className="flex items-center justify-between border-t pt-3">
+                  <span className="font-medium">{t('dashboard.lineResult')}</span>
+                  <span
+                    className={cn(
+                      'tabular text-xl font-semibold',
+                      summary.debts.afterDebtsMinorUnits < 0 ? 'text-destructive' : 'text-primary',
+                    )}
+                  >
+                    {formatMoneyLocale(summary.debts.afterDebtsMinorUnits, currency)}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {summary.debts.hasPlan ? t('dashboard.debtsHint') : t('dashboard.debtsNoPlan')}
+                </p>
+                {summary.debts.paidMinorUnits > 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    {t('dashboard.debtsPaid', {
+                      amount: formatMoneyLocale(summary.debts.paidMinorUnits, currency),
+                    })}
+                  </p>
+                ) : null}
+                {summary.debts.monthsToFreedom ? (
+                  <p className="text-xs font-medium text-primary">
+                    {t('dashboard.monthsToFreedom', { months: summary.debts.monthsToFreedom })}
+                  </p>
+                ) : null}
+              </CardContent>
+            </Card>
+          ) : null}
 
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
