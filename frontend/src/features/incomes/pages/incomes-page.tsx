@@ -15,12 +15,19 @@ import { EmptyState } from '@/shared/components/empty-state';
 import { MonthSwitcher } from '@/shared/components/month-switcher';
 import { IncomeForm } from '../components/income-form';
 import { IncomeList } from '../components/income-list';
+import type { Income } from '../domain/income';
 import { useIncomes } from '../hooks/use-incomes';
 
 export function IncomesPage() {
   const { t } = useTranslation();
   const { data: incomes = [], isLoading } = useIncomes();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<Income | null>(null);
+
+  const openEdit = (income: Income) => {
+    setEditing(income);
+    setDialogOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -33,14 +40,21 @@ export function IncomesPage() {
           <MonthSwitcher />
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button>Nuevo ingreso</Button>
+              <Button onClick={() => setEditing(null)}>Nuevo ingreso</Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Nuevo ingreso</DialogTitle>
-                <DialogDescription>Registra una entrada de dinero de este mes.</DialogDescription>
+                <DialogTitle>{editing ? 'Editar ingreso' : 'Nuevo ingreso'}</DialogTitle>
+                <DialogDescription>
+                  {editing
+                    ? 'Corrige los datos del ingreso.'
+                    : 'Registra una entrada de dinero de este mes.'}
+                </DialogDescription>
               </DialogHeader>
-              <IncomeForm onDone={() => setDialogOpen(false)} />
+              <IncomeForm
+                income={editing ?? undefined}
+                onDone={() => setDialogOpen(false)}
+              />
             </DialogContent>
           </Dialog>
         </div>
@@ -60,7 +74,7 @@ export function IncomesPage() {
             <CardTitle>Ingresos del mes</CardTitle>
           </CardHeader>
           <CardContent>
-            <IncomeList incomes={incomes} />
+            <IncomeList incomes={incomes} onEdit={openEdit} />
           </CardContent>
         </Card>
       )}

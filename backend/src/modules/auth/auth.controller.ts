@@ -3,10 +3,12 @@ import { env } from '../../config/env';
 import { ValidationError } from '../../shared/errors/app-error';
 import { asyncHandler } from '../../shared/utils/async-handler';
 import {
+  changePasswordSchema,
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
   resetPasswordSchema,
+  updateProfileSchema,
 } from './auth.schemas';
 import { authService } from './auth.service';
 import type { RequestMeta } from './auth.service';
@@ -98,5 +100,17 @@ export const authController = {
   me: asyncHandler(async (req, res) => {
     const user = await authService.getMe(req.user?.userId ?? '');
     res.json({ user });
+  }),
+
+  updateMe: asyncHandler(async (req, res) => {
+    const input = updateProfileSchema.parse(req.body);
+    const user = await authService.updateProfile(req.user?.userId ?? '', input);
+    res.json({ user });
+  }),
+
+  changePassword: asyncHandler(async (req, res) => {
+    const input = changePasswordSchema.parse(req.body);
+    await authService.changePassword(req.user?.userId ?? '', input);
+    res.json({ message: 'Contraseña actualizada correctamente' });
   }),
 };

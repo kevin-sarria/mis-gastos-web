@@ -1,11 +1,36 @@
+import { prisma } from '../../lib/prisma';
 import { NotFoundError } from '../../shared/errors/app-error';
+import type { MonthRange } from '../../shared/utils/finance';
 import { alertService } from '../alerts/alert.service';
 import { budgetRepository } from './budget.repository';
 import type { BudgetCreateInput, BudgetUpdateInput } from './budget.schemas';
 
 export const budgetService = {
-  list(userId: string) {
-    return budgetRepository.list(userId);
+  async list(userId: string, range: MonthRange) {
+    const [budgets, expenses] = await Promise.all([
+      budgetRepository.list(userId),
+      prisma.expense.findMany({
+        where: { userId, date: { gte: range.start, lt: range.end } },
+        select: { categoryId: true, amountMinorUnits: true },
+      }),
+    ]);
+
+    const totalSpent = expenses.reduce((sum, expense) => sum + expense.amountMinorUnits, 0);
+    const spentByCategory = new Map<string, number>();
+
+    for (const expense of expenses) {
+      spentByCategory.set(
+        expense.categoryId,
+        (spentByCategory.get(expense.categoryId) ?? 0) + expense.amountMinorUnits,
+      );
+    }
+
+    return budgets.map((budget) => ({
+      ...budget,
+      spentMinorUnits: budget.categoryId
+        ? (spentByCategory.get(budget.categoryId) ?? 0)
+        : totalSpent,
+    }));
   },
 
   async create(userId: string, input: BudgetCreateInput) {

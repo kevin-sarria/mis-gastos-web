@@ -42,6 +42,15 @@ export const httpAuthApi: AuthApi = {
     const { data } = await httpClient.get<{ currencies: Currency[] }>('/currencies');
     return data.currencies;
   },
+
+  async updateProfile(input) {
+    const { data } = await httpClient.patch<{ user: ApiUserDto }>('/auth/me', input);
+    return mapUserToDomain(data.user);
+  },
+
+  async changePassword(input) {
+    await httpClient.post('/auth/me/password', input);
+  },
 };
 
 function toSession(dto: AuthResponseDto): AuthSession {

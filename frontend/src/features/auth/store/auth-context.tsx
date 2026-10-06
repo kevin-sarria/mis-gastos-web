@@ -14,6 +14,7 @@ interface AuthContextValue {
   register: (input: RegisterParams) => Promise<void>;
   logout: () => Promise<void>;
   setSession: (session: AuthSession) => void;
+  updateUser: (user: AuthUser) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -45,6 +46,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     tokenStorage.set(session.accessToken);
     authStorage.setUser(session.user);
     setUser(session.user);
+  }, []);
+
+  const updateUser = useCallback((next: AuthUser) => {
+    authStorage.setUser(next);
+    setUser(next);
   }, []);
 
   const login = useCallback(
@@ -83,8 +89,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register,
       logout,
       setSession,
+      updateUser,
     }),
-    [user, isLoading, login, register, logout, setSession],
+    [user, isLoading, login, register, logout, setSession, updateUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

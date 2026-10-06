@@ -85,7 +85,7 @@ export function CategorySelect({
           </DialogHeader>
           <CategoryForm
             type={type}
-            onCreated={(category) => {
+            onSaved={(category) => {
               onChange(category.id);
               setDialogOpen(false);
             }}

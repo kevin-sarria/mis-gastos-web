@@ -24,3 +24,5 @@ authRouter.post('/reset-password', strictLimiter, authController.resetPassword);
 authRouter.get('/google', authController.googleStart);
 authRouter.get('/google/callback', authController.googleCallback);
 authRouter.get('/me', requireAuth, authController.me);
+authRouter.patch('/me', requireAuth, authController.updateMe);
+authRouter.post('/me/password', requireAuth, authController.changePassword);

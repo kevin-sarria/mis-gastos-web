@@ -5,6 +5,7 @@ export interface Budget {
   categoryId: string | null;
   name: string;
   amountMinorUnits: number;
+  spentMinorUnits: number;
   period: BudgetPeriod;
   alertThresholdPct: number;
   isActive: boolean;

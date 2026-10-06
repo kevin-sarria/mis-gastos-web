@@ -10,7 +10,7 @@ import type { PublicUser } from './auth.mapper';
 import { googleOAuth } from './oauth/google.service';
 import { passwordService } from './password.service';
 import { tokenService } from './token.service';
-import type { LoginInput, RegisterInput, ResetPasswordInput } from './auth.schemas';
+import type { ChangePasswordInput, LoginInput, RegisterInput, ResetPasswordInput, UpdateProfileInput } from './auth.schemas';
 
 export interface RequestMeta {
   userAgent?: string | null;
@@ -186,6 +186,33 @@ class AuthService {
       throw new UnauthorizedError('Usuario no encontrado');
     }
     return toPublicUser(user);
+  }
+
+  async updateProfile(userId: string, input: UpdateProfileInput): Promise<PublicUser> {
+    if (input.currencyCode) {
+      const currency = await currencyRepository.findByCode(input.currencyCode);
+      if (!currency) {
+        throw new ValidationError('La moneda seleccionada no es válida');
+      }
+    }
+
+    const user = await authRepository.updateProfile(userId, input);
+    return toPublicUser(user);
+  }
+
+  async changePassword(userId: string, input: ChangePasswordInput): Promise<void> {
+    const user = await authRepository.findById(userId);
+    if (!user?.passwordHash) {
+      throw new ValidationError('Tu cuenta no usa contraseña');
+    }
+
+    const valid = await passwordService.verify(user.passwordHash, input.currentPassword);
+    if (!valid) {
+      throw new UnauthorizedError('La contraseña actual no es correcta');
+    }
+
+    const passwordHash = await passwordService.hash(input.newPassword);
+    await authRepository.updateUserPassword(userId, passwordHash);
   }
 
   private async issueResult(user: User, meta: RequestMeta): Promise<AuthResult> {

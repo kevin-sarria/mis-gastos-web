@@ -15,12 +15,19 @@ import { EmptyState } from '@/shared/components/empty-state';
 import { MonthSwitcher } from '@/shared/components/month-switcher';
 import { ExpenseForm } from '../components/expense-form';
 import { ExpenseList } from '../components/expense-list';
+import type { Expense } from '../domain/expense';
 import { useExpenses } from '../hooks/use-expenses';
 
 export function ExpensesPage() {
   const { t } = useTranslation();
   const { data: expenses = [], isLoading } = useExpenses();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<Expense | null>(null);
+
+  const openEdit = (expense: Expense) => {
+    setEditing(expense);
+    setDialogOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -33,14 +40,18 @@ export function ExpensesPage() {
           <MonthSwitcher />
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button>Nuevo gasto</Button>
+              <Button onClick={() => setEditing(null)}>Nuevo gasto</Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Nuevo gasto</DialogTitle>
-                <DialogDescription>Anota un gasto de este mes y adjunta su factura.</DialogDescription>
+                <DialogTitle>{editing ? 'Editar gasto' : 'Nuevo gasto'}</DialogTitle>
+                <DialogDescription>
+                  {editing
+                    ? 'Corrige los datos del gasto.'
+                    : 'Anota un gasto de este mes y adjunta su factura.'}
+                </DialogDescription>
               </DialogHeader>
-              <ExpenseForm onDone={() => setDialogOpen(false)} />
+              <ExpenseForm expense={editing ?? undefined} onDone={() => setDialogOpen(false)} />
             </DialogContent>
           </Dialog>
         </div>
@@ -60,7 +71,7 @@ export function ExpensesPage() {
             <CardTitle>Gastos del mes</CardTitle>
           </CardHeader>
           <CardContent>
-            <ExpenseList expenses={expenses} />
+            <ExpenseList expenses={expenses} onEdit={openEdit} />
           </CardContent>
         </Card>
       )}

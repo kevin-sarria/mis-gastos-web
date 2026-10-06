@@ -18,6 +18,16 @@ export interface ResetPasswordParams {
   password: string;
 }
 
+export interface UpdateProfileParams {
+  name?: string;
+  currencyCode?: string;
+}
+
+export interface ChangePasswordParams {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface AuthApi {
   login(input: LoginParams): Promise<AuthSession>;
   register(input: RegisterParams): Promise<AuthSession>;
@@ -26,4 +36,6 @@ export interface AuthApi {
   forgotPassword(email: string): Promise<void>;
   resetPassword(input: ResetPasswordParams): Promise<void>;
   getCurrencies(): Promise<Currency[]>;
+  updateProfile(input: UpdateProfileParams): Promise<AuthUser>;
+  changePassword(input: ChangePasswordParams): Promise<void>;
 }

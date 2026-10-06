@@ -12,8 +12,8 @@ import { httpFileApi } from '@/features/files/api/file-api';
 import { CurrencyInput } from '@/shared/components/currency-input';
 import { messageFromError } from '@/shared/lib/error-message';
 import { EXPENSE_TAG_LABELS } from '../domain/expense';
-import type { ExpenseTag } from '../domain/expense';
-import { useCreateExpense } from '../hooks/use-expenses';
+import type { Expense, ExpenseTag } from '../domain/expense';
+import { useCreateExpense, useUpdateExpense } from '../hooks/use-expenses';
 import { expenseFormSchema, type ExpenseFormValues } from '../schemas/expense-form.schema';
 
 const TAG_OPTIONS: ExpenseTag[] = ['FIXED', 'VARIABLE', 'EMERGENCY', 'ANT_EXPENSE'];
@@ -25,22 +25,42 @@ function todayInputValue(): string {
   ).padStart(2, '0')}`;
 }
 
-export function ExpenseForm({ onDone }: { onDone?: () => void }) {
-  const { user } = useAuth();
-  const minorUnits = user?.currency?.minorUnits ?? 2;
-  const createExpense = useCreateExpense();
-  const [file, setFile] = useState<File | null>(null);
-
-  const form = useForm<ExpenseFormValues>({
-    resolver: zodResolver(expenseFormSchema),
-    defaultValues: {
+function defaultValuesFrom(expense?: Expense): ExpenseFormValues {
+  if (!expense) {
+    return {
       categoryId: '',
       title: '',
       amount: '',
       date: todayInputValue(),
       tags: [],
       justification: '',
-    },
+    };
+  }
+  return {
+    categoryId: expense.categoryId,
+    title: expense.title,
+    amount: String(expense.amountMinorUnits),
+    date: expense.date.slice(0, 10),
+    tags: expense.tags,
+    justification: expense.justification ?? '',
+  };
+}
+
+interface ExpenseFormProps {
+  expense?: Expense;
+  onDone?: () => void;
+}
+
+export function ExpenseForm({ expense, onDone }: ExpenseFormProps) {
+  const { user } = useAuth();
+  const minorUnits = user?.currency?.minorUnits ?? 2;
+  const createExpense = useCreateExpense();
+  const updateExpense = useUpdateExpense();
+  const [file, setFile] = useState<File | null>(null);
+
+  const form = useForm<ExpenseFormValues>({
+    resolver: zodResolver(expenseFormSchema),
+    defaultValues: defaultValuesFrom(expense),
   });
 
   const tags = form.watch('tags');
@@ -55,20 +75,25 @@ export function ExpenseForm({ onDone }: { onDone?: () => void }) {
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      const expense = await createExpense.mutateAsync({
+      const payload = {
         categoryId: values.categoryId,
         title: values.title,
         amountMinorUnits: Number(values.amount),
         date: new Date(values.date).toISOString(),
         tags: values.tags,
         justification: values.justification || null,
-      });
+      };
 
-      if (file) {
-        await httpFileApi.upload(expense.id, file);
+      if (expense) {
+        await updateExpense.mutateAsync({ id: expense.id, input: payload });
+      } else {
+        const created = await createExpense.mutateAsync(payload);
+        if (file) {
+          await httpFileApi.upload(created.id, file);
+        }
       }
 
-      toast.success('Gasto registrado');
+      toast.success(expense ? 'Gasto actualizado' : 'Gasto registrado');
       form.reset();
       form.clearErrors();
       setFile(null);
@@ -155,18 +180,20 @@ export function ExpenseForm({ onDone }: { onDone?: () => void }) {
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="file">Factura (PDF o imagen, máx. 10 MB)</Label>
-        <Input
-          id="file"
-          type="file"
-          accept=".pdf,.jpg,.jpeg,.png,.webp"
-          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-        />
-      </div>
+      {expense ? null : (
+        <div className="space-y-2">
+          <Label htmlFor="file">Factura (PDF o imagen, máx. 10 MB)</Label>
+          <Input
+            id="file"
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png,.webp"
+            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+          />
+        </div>
+      )}
 
       <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-        Guardar gasto
+        {expense ? 'Guardar cambios' : 'Guardar gasto'}
       </Button>
     </form>
   );

@@ -1,6 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/features/auth/store/auth-context';
+import { CategoryManager } from '../components/category-manager';
+import { PasswordForm } from '../components/password-form';
+import { ProfileForm } from '../components/profile-form';
 import { CurrencyManager } from '../components/currency-manager';
 
 export function SettingsPage() {
@@ -18,23 +21,21 @@ export function SettingsPage() {
         <CardHeader>
           <CardTitle>Perfil</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2 text-sm">
-          <p>
-            <span className="text-muted-foreground">Nombre:</span> {user?.name}
-          </p>
-          <p>
-            <span className="text-muted-foreground">Correo:</span> {user?.email}
-          </p>
-          <p>
-            <span className="text-muted-foreground">Moneda:</span> {user?.currency?.symbol}{' '}
-            {user?.currencyCode}
-          </p>
-          <p>
-            <span className="text-muted-foreground">Rol:</span>{' '}
-            {user?.role === 'SUPER_ADMIN' ? 'Administrador' : 'Usuario'}
-          </p>
+        <CardContent>
+          <ProfileForm />
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Contraseña</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PasswordForm />
+        </CardContent>
+      </Card>
+
+      <CategoryManager />
 
       {user?.role === 'SUPER_ADMIN' ? <CurrencyManager /> : null}
     </div>

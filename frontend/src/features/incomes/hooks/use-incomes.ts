@@ -19,6 +19,15 @@ export function useCreateIncome() {
   });
 }
 
+export function useUpdateIncome() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: Partial<IncomeCreateInput> }) =>
+      httpIncomeApi.update(id, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['incomes'] }),
+  });
+}
+
 export function useDeleteIncome() {
   const queryClient = useQueryClient();
   return useMutation({

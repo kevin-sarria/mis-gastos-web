@@ -3,6 +3,7 @@ import type { ExpenseAttachment } from '@/features/expenses/domain/expense';
 
 export interface FileApi {
   upload(expenseId: string, file: File): Promise<ExpenseAttachment>;
+  remove(attachmentId: string): Promise<void>;
 }
 
 export const httpFileApi: FileApi = {
@@ -14,5 +15,9 @@ export const httpFileApi: FileApi = {
       formData,
     );
     return data.attachment;
+  },
+
+  async remove(attachmentId) {
+    await httpClient.delete(`/files/attachments/${attachmentId}`);
   },
 };

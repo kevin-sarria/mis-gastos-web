@@ -13,7 +13,7 @@ import {
   CATEGORY_COLOR_PRESETS,
   DEFAULT_CATEGORY_COLOR,
 } from '../domain/category-colors';
-import { useCreateCategory } from '../hooks/use-categories';
+import { useCreateCategory, useUpdateCategory } from '../hooks/use-categories';
 
 const categoryFormSchema = z.object({
   name: z.string().trim().min(2, 'Mínimo 2 caracteres').max(60),
@@ -23,29 +23,33 @@ type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 
 interface CategoryFormProps {
   type: CategoryType;
-  onCreated?: (category: Category) => void;
+  category?: Category;
+  onSaved?: (category: Category) => void;
 }
 
-export function CategoryForm({ type, onCreated }: CategoryFormProps) {
+export function CategoryForm({ type, category, onSaved }: CategoryFormProps) {
   const createCategory = useCreateCategory();
-  const [color, setColor] = useState<string>(DEFAULT_CATEGORY_COLOR);
+  const updateCategory = useUpdateCategory();
+  const [color, setColor] = useState<string>(category?.color ?? DEFAULT_CATEGORY_COLOR);
 
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(categoryFormSchema),
-    defaultValues: { name: '' },
+    defaultValues: { name: category?.name ?? '' },
   });
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      const category = await createCategory.mutateAsync({
-        type,
-        name: values.name,
-        color,
-      });
-      toast.success('Categoría creada');
+      const saved = category
+        ? await updateCategory.mutateAsync({
+            id: category.id,
+            input: { name: values.name, color },
+          })
+        : await createCategory.mutateAsync({ type, name: values.name, color });
+
+      toast.success(category ? 'Categoría actualizada' : 'Categoría creada');
       form.reset();
       setColor(DEFAULT_CATEGORY_COLOR);
-      onCreated?.(category);
+      onSaved?.(saved);
     } catch (error) {
       toast.error(messageFromError(error));
     }
@@ -84,7 +88,7 @@ export function CategoryForm({ type, onCreated }: CategoryFormProps) {
       </div>
 
       <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-        Crear categoría
+        {category ? 'Guardar cambios' : 'Crear categoría'}
       </Button>
     </form>
   );

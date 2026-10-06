@@ -2,14 +2,16 @@ import { httpClient } from '@/core/http/client';
 import type { Budget, BudgetCreateInput } from '../domain/budget';
 
 export interface BudgetApi {
-  list(): Promise<Budget[]>;
+  list(month: string): Promise<Budget[]>;
   create(input: BudgetCreateInput): Promise<Budget>;
   remove(id: string): Promise<void>;
 }
 
 export const httpBudgetApi: BudgetApi = {
-  async list() {
-    const { data } = await httpClient.get<{ budgets: Budget[] }>('/budgets');
+  async list(month) {
+    const { data } = await httpClient.get<{ budgets: Budget[] }>('/budgets', {
+      params: { month },
+    });
     return data.budgets;
   },
 

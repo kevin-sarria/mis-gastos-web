@@ -1,9 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSelectedMonth } from '@/shared/hooks/use-selected-month';
 import { httpBudgetApi } from '../api/budget-api';
 import type { BudgetCreateInput } from '../domain/budget';
 
 export function useBudgets() {
-  return useQuery({ queryKey: ['budgets'], queryFn: () => httpBudgetApi.list() });
+  const { month } = useSelectedMonth();
+  return useQuery({
+    queryKey: ['budgets', month],
+    queryFn: () => httpBudgetApi.list(month),
+  });
 }
 
 export function useCreateBudget() {

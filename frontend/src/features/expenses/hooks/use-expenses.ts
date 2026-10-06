@@ -19,6 +19,15 @@ export function useCreateExpense() {
   });
 }
 
+export function useUpdateExpense() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: Partial<ExpenseCreateInput> }) =>
+      httpExpenseApi.update(id, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['expenses'] }),
+  });
+}
+
 export function useDeleteExpense() {
   const queryClient = useQueryClient();
   return useMutation({

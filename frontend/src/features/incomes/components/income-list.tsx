@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/store/auth-context';
 import { DEFAULT_CATEGORY_COLOR } from '@/features/categories/domain/category-colors';
@@ -6,7 +6,12 @@ import { formatMoney } from '@/shared/lib/money';
 import type { Income } from '../domain/income';
 import { useDeleteIncome } from '../hooks/use-incomes';
 
-export function IncomeList({ incomes }: { incomes: Income[] }) {
+interface IncomeListProps {
+  incomes: Income[];
+  onEdit?: (income: Income) => void;
+}
+
+export function IncomeList({ incomes, onEdit }: IncomeListProps) {
   const { user } = useAuth();
   const deleteIncome = useDeleteIncome();
 
@@ -25,10 +30,18 @@ export function IncomeList({ incomes }: { incomes: Income[] }) {
               {new Date(income.date).toLocaleDateString('es')}
             </p>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            <span className="font-semibold">
+          <div className="flex shrink-0 items-center gap-1">
+            <span className="mr-1 font-semibold">
               {formatMoney(income.amountMinorUnits, user?.currency)}
             </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onEdit?.(income)}
+              aria-label="Editar ingreso"
+            >
+              <Pencil className="h-4 w-4 text-muted-foreground" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"

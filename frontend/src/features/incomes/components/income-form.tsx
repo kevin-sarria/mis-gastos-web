@@ -9,7 +9,8 @@ import { useAuth } from '@/features/auth/store/auth-context';
 import { CategorySelect } from '@/features/categories/components/category-select';
 import { CurrencyInput } from '@/shared/components/currency-input';
 import { messageFromError } from '@/shared/lib/error-message';
-import { useCreateIncome } from '../hooks/use-incomes';
+import type { Income } from '../domain/income';
+import { useCreateIncome, useUpdateIncome } from '../hooks/use-incomes';
 import { incomeFormSchema, type IncomeFormValues } from '../schemas/income-form.schema';
 
 function todayInputValue(): string {
@@ -19,32 +20,52 @@ function todayInputValue(): string {
   ).padStart(2, '0')}`;
 }
 
-export function IncomeForm({ onDone }: { onDone?: () => void }) {
+function defaultValuesFrom(income?: Income): IncomeFormValues {
+  if (!income) {
+    return { categoryId: '', title: '', amount: '', date: todayInputValue(), note: '' };
+  }
+  return {
+    categoryId: income.categoryId,
+    title: income.title,
+    amount: String(income.amountMinorUnits),
+    date: income.date.slice(0, 10),
+    note: income.note ?? '',
+  };
+}
+
+interface IncomeFormProps {
+  income?: Income;
+  onDone?: () => void;
+}
+
+export function IncomeForm({ income, onDone }: IncomeFormProps) {
   const { user } = useAuth();
   const minorUnits = user?.currency?.minorUnits ?? 2;
   const createIncome = useCreateIncome();
+  const updateIncome = useUpdateIncome();
 
   const form = useForm<IncomeFormValues>({
     resolver: zodResolver(incomeFormSchema),
-    defaultValues: {
-      categoryId: '',
-      title: '',
-      amount: '',
-      date: todayInputValue(),
-      note: '',
-    },
+    defaultValues: defaultValuesFrom(income),
   });
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      await createIncome.mutateAsync({
+      const payload = {
         categoryId: values.categoryId,
         title: values.title,
         amountMinorUnits: Number(values.amount),
         date: new Date(values.date).toISOString(),
         note: values.note || null,
-      });
-      toast.success('Ingreso registrado');
+      };
+
+      if (income) {
+        await updateIncome.mutateAsync({ id: income.id, input: payload });
+      } else {
+        await createIncome.mutateAsync(payload);
+      }
+
+      toast.success(income ? 'Ingreso actualizado' : 'Ingreso registrado');
       form.reset();
       form.clearErrors();
       onDone?.();
@@ -110,7 +131,7 @@ export function IncomeForm({ onDone }: { onDone?: () => void }) {
       </div>
 
       <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-        Guardar ingreso
+        {income ? 'Guardar cambios' : 'Guardar ingreso'}
       </Button>
     </form>
   );

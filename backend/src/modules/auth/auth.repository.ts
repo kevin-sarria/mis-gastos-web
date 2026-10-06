@@ -41,6 +41,14 @@ export const authRepository = {
     return prisma.user.update({ where: { id: userId }, data: { passwordHash } });
   },
 
+  updateProfile(userId: string, data: { name?: string; currencyCode?: string }) {
+    return prisma.user.update({
+      where: { id: userId },
+      data,
+      include: { currency: true },
+    });
+  },
+
   linkGoogleId(userId: string, googleId: string, avatarUrl?: string | null) {
     return prisma.user.update({
       where: { id: userId },

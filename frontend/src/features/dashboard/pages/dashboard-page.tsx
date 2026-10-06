@@ -8,15 +8,14 @@ import { MonthSwitcher } from '@/shared/components/month-switcher';
 import { formatMoney } from '@/shared/lib/money';
 import { useDashboard } from '../hooks/use-dashboard';
 
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-}: {
+interface StatCardProps {
   title: string;
   value: string;
   icon: typeof Wallet;
-}) {
+  trend?: number | null;
+}
+
+function StatCard({ title, value, icon: Icon, trend }: StatCardProps) {
   return (
     <Card>
       <CardContent className="flex items-center gap-4 p-6">
@@ -26,6 +25,16 @@ function StatCard({
         <div className="min-w-0">
           <p className="text-sm text-muted-foreground">{title}</p>
           <p className="truncate text-lg font-semibold">{value}</p>
+          {trend !== undefined && trend !== null ? (
+            <p className="flex items-center gap-1 text-xs text-muted-foreground">
+              {trend >= 0 ? (
+                <ArrowUpRight className="h-3 w-3" />
+              ) : (
+                <ArrowDownRight className="h-3 w-3" />
+              )}
+              {Math.abs(Math.round(trend * 100))}% vs mes anterior
+            </p>
+          ) : null}
         </div>
       </CardContent>
     </Card>
@@ -62,11 +71,13 @@ export function DashboardPage() {
               title="Ingresos"
               value={formatMoney(summary.totalIncome, currency)}
               icon={ArrowDownRight}
+              trend={summary.trends.income}
             />
             <StatCard
               title="Gastos"
               value={formatMoney(summary.totalExpenses, currency)}
               icon={ArrowUpRight}
+              trend={summary.trends.expenses}
             />
             <StatCard
               title="Alertas activas"
