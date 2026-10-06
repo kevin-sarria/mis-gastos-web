@@ -397,6 +397,8 @@ export const en: typeof es = {
       description: 'How to kill your debts sooner and paying less?',
       extra: 'How much extra can you put in each month?',
       extraHint: 'All the extra goes to a single debt: the priority one.',
+      calculate: 'Calculate plan',
+      calculating: 'Recalculating…',
       strategy: 'Strategy',
       avalanche: 'Avalanche',
       avalancheHint: 'Highest interest first: it is the one that costs you least.',

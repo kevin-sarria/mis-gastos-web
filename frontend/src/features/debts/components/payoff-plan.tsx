@@ -1,7 +1,8 @@
-import { Snowflake, TrendingDown } from 'lucide-react';
+import { Loader2, Snowflake, TrendingDown } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/features/auth/store/auth-context';
@@ -36,7 +37,9 @@ function PlanCard({
             {Icon ? <Icon className="h-4 w-4 text-primary" /> : null}
             {title}
           </span>
-          {recommended ? <Badge className="bg-primary/15 text-primary">{t('debts.plan.recommended')}</Badge> : null}
+          {recommended ? (
+            <Badge className="bg-primary/15 text-primary">{t('debts.plan.recommended')}</Badge>
+          ) : null}
         </div>
 
         {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
@@ -75,11 +78,24 @@ export function PayoffPlanView() {
   const { t } = useTranslation();
   const minorUnits = user?.currency?.minorUnits ?? 2;
   const currency = user?.currency;
-  const [extra, setExtra] = useState('');
-  const { data, isLoading } = usePayoffPlan(Number(extra) || 0);
 
-  if (isLoading || !data) {
-    return <p className="text-muted-foreground">{t('common.loading')}</p>;
+  // `input` es lo que se escribe; `extra` es lo que ya se envió al servidor.
+  // Solo se recalcula al pulsar el botón, no en cada tecla.
+  const [input, setInput] = useState('');
+  const [extra, setExtra] = useState(0);
+
+  const { data, isLoading, isFetching } = usePayoffPlan(extra);
+
+  const pending = Number(input) || 0;
+  const canCalculate = pending !== extra;
+
+  if (!data) {
+    return (
+      <div className="flex items-center gap-2 text-muted-foreground">
+        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+        {t('common.loading')}
+      </div>
+    );
   }
 
   if (data.totalBalanceMinorUnits === 0) {
@@ -102,17 +118,31 @@ export function PayoffPlanView() {
             <p className="font-medium">{t('debts.plan.title')}</p>
             <p className="text-sm text-muted-foreground">{t('debts.plan.description')}</p>
           </div>
-          <div className="max-w-xs space-y-2">
-            <Label htmlFor="plan-extra">{t('debts.plan.extra')}</Label>
-            <CurrencyInput
-              id="plan-extra"
-              placeholder="0"
-              minorUnits={minorUnits}
-              value={extra}
-              onValueChange={setExtra}
-            />
-            <p className="text-xs text-muted-foreground">{t('debts.plan.extraHint')}</p>
-          </div>
+
+          <form
+            className="flex flex-wrap items-end gap-3"
+            onSubmit={(event) => {
+              event.preventDefault();
+              setExtra(pending);
+            }}
+          >
+            <div className="w-full max-w-xs space-y-2">
+              <Label htmlFor="plan-extra">{t('debts.plan.extra')}</Label>
+              <CurrencyInput
+                id="plan-extra"
+                placeholder="0"
+                minorUnits={minorUnits}
+                value={input}
+                onValueChange={setInput}
+              />
+              <p className="text-xs text-muted-foreground">{t('debts.plan.extraHint')}</p>
+            </div>
+
+            <Button type="submit" disabled={!canCalculate || isFetching}>
+              {isFetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {isFetching ? t('debts.plan.calculating') : t('debts.plan.calculate')}
+            </Button>
+          </form>
         </CardContent>
       </Card>
 
@@ -129,7 +159,7 @@ export function PayoffPlanView() {
         </Card>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className={cn('grid gap-4 lg:grid-cols-3', isFetching && 'opacity-60')}>
         <PlanCard title={t('debts.plan.minimumsOnly')} plan={minimumsOnly} />
         <PlanCard
           title={t('debts.plan.avalanche')}

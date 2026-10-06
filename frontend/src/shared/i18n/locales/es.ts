@@ -395,6 +395,8 @@ export const es = {
       description: '¿Cómo matar las deudas antes y pagando menos?',
       extra: '¿Cuánto puedes aportar extra cada mes?',
       extraHint: 'Todo el extra va a una sola deuda: la prioritaria.',
+      calculate: 'Calcular plan',
+      calculating: 'Recalculando…',
       strategy: 'Estrategia',
       avalanche: 'Avalancha',
       avalancheHint: 'Primero la de mayor interés: es la que menos te cuesta.',

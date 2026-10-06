@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { httpDebtApi } from '../api/debt-api';
 import type { PaymentInput, SimulatorInput } from '../api/debt-api';
 import type { DebtCreateInput } from '../domain/debt';
@@ -53,5 +53,8 @@ export function usePayoffPlan(extraMinorUnits: number) {
   return useQuery({
     queryKey: [...KEY, 'payoff-plan', extraMinorUnits],
     queryFn: () => httpDebtApi.payoffPlan(extraMinorUnits),
+    // Mantiene el plan anterior en pantalla mientras llega el nuevo:
+    // así no parpadea al recalcular.
+    placeholderData: keepPreviousData,
   });
 }
