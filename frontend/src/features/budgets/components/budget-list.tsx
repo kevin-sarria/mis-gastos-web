@@ -37,7 +37,7 @@ export function BudgetList({ budgets }: { budgets: Budget[] }) {
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <span className="text-sm font-semibold">
+                <span className="tabular text-sm font-semibold">
                   {formatMoneyLocale(budget.spentMinorUnits, user?.currency)} /{' '}
                   {formatMoneyLocale(budget.amountMinorUnits, user?.currency)}
                 </span>

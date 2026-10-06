@@ -3,6 +3,7 @@ import type { es } from './es';
 export const en: typeof es = {
   app: {
     name: 'Mis Gastos',
+    tagline: 'month by month',
   },
   nav: {
     dashboard: 'Home',

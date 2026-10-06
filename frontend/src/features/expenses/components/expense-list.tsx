@@ -91,7 +91,7 @@ export function ExpenseList({ expenses, onEdit }: ExpenseListProps) {
             </div>
 
             <div className="flex shrink-0 items-center gap-1">
-              <span className="mr-1 font-semibold">
+              <span className="tabular mr-1 font-semibold">
                 {formatMoneyLocale(expense.amountMinorUnits, user?.currency)}
               </span>
               <Button

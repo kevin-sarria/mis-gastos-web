@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAlerts, useMarkAlertRead } from '@/features/alerts/hooks/use-alerts';
 import { useAuth } from '@/features/auth/store/auth-context';
+import { cn } from '@/lib/utils';
 import { MonthSwitcher } from '@/shared/components/month-switcher';
 import { formatMoneyLocale } from '@/shared/lib/format';
 import { useDashboard } from '../hooks/use-dashboard';
@@ -13,20 +14,36 @@ interface StatCardProps {
   value: string;
   icon: typeof Wallet;
   trend?: number | null;
+  highlight?: boolean;
 }
 
-function StatCard({ title, value, icon: Icon, trend }: StatCardProps) {
+function StatCard({ title, value, icon: Icon, trend, highlight }: StatCardProps) {
   const { t } = useTranslation();
 
   return (
-    <Card>
+    <Card className={cn(highlight && 'bg-primary/[0.07]')}>
       <CardContent className="flex items-center gap-4 p-6">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-          <Icon className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+        <div
+          className={cn(
+            'flex h-10 w-10 items-center justify-center rounded-xl',
+            highlight ? 'bg-primary text-primary-foreground' : 'bg-muted',
+          )}
+        >
+          <Icon
+            className={cn('h-5 w-5', highlight ? undefined : 'text-muted-foreground')}
+            aria-hidden="true"
+          />
         </div>
         <div className="min-w-0">
           <p className="text-sm text-muted-foreground">{title}</p>
-          <p className="truncate text-lg font-semibold">{value}</p>
+          <p
+            className={cn(
+              'tabular truncate font-semibold',
+              highlight ? 'text-2xl' : 'text-lg',
+            )}
+          >
+            {value}
+          </p>
           {trend !== undefined && trend !== null ? (
             <p className="flex items-center gap-1 text-xs text-muted-foreground">
               {trend >= 0 ? (
@@ -72,6 +89,7 @@ export function DashboardPage() {
               title={t('dashboard.balance')}
               value={formatMoneyLocale(summary.balance, currency)}
               icon={Wallet}
+              highlight
             />
             <StatCard
               title={t('dashboard.incomes')}

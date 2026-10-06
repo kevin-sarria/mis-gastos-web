@@ -8,7 +8,7 @@ export function RegisterPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="flex min-h-screen items-center justify-center bg-accent/40 p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>{t('auth.createAccount')}</CardTitle>

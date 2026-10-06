@@ -32,7 +32,7 @@ export function IncomeList({ incomes, onEdit }: IncomeListProps) {
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            <span className="mr-1 font-semibold">
+            <span className="tabular mr-1 font-semibold">
               {formatMoneyLocale(income.amountMinorUnits, user?.currency)}
             </span>
             <Button

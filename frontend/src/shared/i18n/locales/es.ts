@@ -1,6 +1,7 @@
 export const es = {
   app: {
     name: 'Mis Gastos',
+    tagline: 'mes a mes',
   },
   nav: {
     dashboard: 'Inicio',
