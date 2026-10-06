@@ -1,4 +1,4 @@
-import { Loader2, Snowflake, TrendingDown } from 'lucide-react';
+import { Info, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
@@ -9,52 +9,75 @@ import { useAuth } from '@/features/auth/store/auth-context';
 import { CurrencyInput } from '@/shared/components/currency-input';
 import { cn } from '@/lib/utils';
 import { formatMoneyLocale } from '@/shared/lib/format';
-import type { PayoffResult } from '../domain/debt';
+import { monthlyInterestMinorUnits, type PayoffResult } from '../domain/debt';
 import { usePayoffPlan } from '../hooks/use-debts';
 
-function PlanCard({
+interface StrategyCardProps {
+  title: string;
+  hint: string;
+  plan: PayoffResult;
+  maxMonths: number;
+  highlighted?: boolean;
+  badge?: { label: string; className: string };
+  startName?: string;
+  footer?: { text: string; className: string };
+}
+
+function StrategyCard({
   title,
   hint,
   plan,
-  recommended,
-  icon: Icon,
-}: {
-  title: string;
-  hint?: string;
-  plan: PayoffResult;
-  recommended?: boolean;
-  icon?: typeof TrendingDown;
-}) {
+  maxMonths,
+  highlighted,
+  badge,
+  startName,
+  footer,
+}: StrategyCardProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const currency = user?.currency;
+  const width = maxMonths > 0 ? Math.max((plan.months / maxMonths) * 100, 6) : 0;
 
   return (
-    <Card className={cn(recommended && 'bg-primary/[0.07]')}>
-      <CardContent className="space-y-3">
-        <div className="flex items-center justify-between gap-2">
-          <span className="flex items-center gap-2 font-medium">
-            {Icon ? <Icon className="h-4 w-4 text-primary" /> : null}
-            {title}
-          </span>
-          {recommended ? (
-            <Badge className="bg-primary/15 text-primary">{t('debts.plan.recommended')}</Badge>
-          ) : null}
+    <Card className={cn('h-full', highlighted && 'bg-primary/[0.07]')}>
+      <CardContent className="flex h-full flex-col gap-3">
+        <div className="flex items-start justify-between gap-2">
+          <p className="font-medium">{title}</p>
+          {badge ? <Badge className={badge.className}>{badge.label}</Badge> : null}
         </div>
 
-        {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+        <p className="text-sm text-muted-foreground">{hint}</p>
 
-        <p className={cn('tabular text-2xl font-semibold', recommended && 'text-primary')}>
-          {t('debts.plan.months', { count: plan.months })}
-        </p>
-        <p className="tabular text-sm text-muted-foreground">
-          {t('debts.plan.interest', {
-            amount: formatMoneyLocale(plan.totalInterestMinorUnits, currency),
-          })}
-        </p>
+        {startName ? (
+          <p className="text-sm font-medium">
+            {t('debts.plan.startsWith', { name: startName })}
+          </p>
+        ) : null}
+
+        <div className="space-y-1.5">
+          <p className={cn('tabular text-2xl font-semibold', highlighted && 'text-primary')}>
+            {t('debts.plan.months', { count: plan.months })}
+          </p>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className={cn(
+                'h-full rounded-full',
+                highlighted ? 'bg-primary' : 'bg-muted-foreground/40',
+              )}
+              style={{ width: `${width}%` }}
+            />
+          </div>
+          <p className="tabular text-sm text-muted-foreground">
+            {t('debts.plan.interest', {
+              amount: formatMoneyLocale(plan.totalInterestMinorUnits, currency),
+            })}
+          </p>
+        </div>
+
+        {footer ? <p className={cn('text-sm font-medium', footer.className)}>{footer.text}</p> : null}
 
         {plan.payoffOrder.length > 0 ? (
-          <div className="space-y-1 border-t pt-3">
+          <div className="mt-auto space-y-1 border-t pt-3">
             <p className="text-xs font-medium text-muted-foreground">{t('debts.plan.order')}</p>
             <ol className="space-y-1">
               {plan.payoffOrder.map((entry) => (
@@ -79,15 +102,10 @@ export function PayoffPlanView() {
   const minorUnits = user?.currency?.minorUnits ?? 2;
   const currency = user?.currency;
 
-  // `input` es lo que se escribe; `extra` es lo que ya se envió al servidor.
-  // Solo se recalcula al pulsar el botón, no en cada tecla.
+  // `input` es lo que escribes; `extra` es lo que ya se pidió al servidor.
   const [input, setInput] = useState('');
   const [extra, setExtra] = useState(0);
-
   const { data, isLoading, isFetching } = usePayoffPlan(extra);
-
-  const pending = Number(input) || 0;
-  const canCalculate = pending !== extra;
 
   if (!data) {
     return (
@@ -109,14 +127,58 @@ export function PayoffPlanView() {
   }
 
   const { minimumsOnly, avalanche, snowball } = data.plans;
+  const bestInterest = Math.min(
+    minimumsOnly.totalInterestMinorUnits,
+    avalanche.totalInterestMinorUnits,
+    snowball.totalInterestMinorUnits,
+  );
+  const bestMonths = Math.min(minimumsOnly.months, avalanche.months, snowball.months);
+  const saving = Math.max(minimumsOnly.totalInterestMinorUnits - bestInterest, 0);
+  const monthsSaved = Math.max(minimumsOnly.months - bestMonths, 0);
+  const maxMonths = Math.max(minimumsOnly.months, avalanche.months, snowball.months);
+
+  const applied = data.extraMonthlyMinorUnits;
+  const pending = Number(input) || 0;
+  const suggested = Math.round(data.totalMonthlyPaymentMinorUnits * 0.1);
+  const tooSmall = applied > 0 && saving < minimumsOnly.totalInterestMinorUnits * 0.02;
+
+  const debtsByCost = [...data.debts].sort(
+    (a, b) =>
+      monthlyInterestMinorUnits(b.balanceMinorUnits, b.monthlyRateMicro) -
+      monthlyInterestMinorUnits(a.balanceMinorUnits, a.monthlyRateMicro),
+  );
+  const first = debtsByCost[0];
+  const maxInterest = first
+    ? monthlyInterestMinorUnits(first.balanceMinorUnits, first.monthlyRateMicro)
+    : 0;
+
+  const quickOptions = [5, 10, 25].map((percent) => ({
+    label: t('debts.plan.quickName', { percent }),
+    value: Math.round(data.totalMonthlyPaymentMinorUnits * (percent / 100)),
+  }));
+
+  const applyExtra = (value: number) => {
+    setInput(String(value));
+    setExtra(value);
+  };
 
   return (
     <div className="space-y-4">
       <Card>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
           <div>
             <p className="font-medium">{t('debts.plan.title')}</p>
             <p className="text-sm text-muted-foreground">{t('debts.plan.description')}</p>
+          </div>
+
+          <div className="rounded-lg bg-muted p-3">
+            <p className="text-sm font-medium">{t('debts.plan.nothingTitle')}</p>
+            <p className="text-sm text-muted-foreground">
+              {t('debts.plan.nothingText', {
+                months: minimumsOnly.months,
+                amount: formatMoneyLocale(minimumsOnly.totalInterestMinorUnits, currency),
+              })}
+            </p>
           </div>
 
           <form
@@ -137,42 +199,158 @@ export function PayoffPlanView() {
               />
               <p className="text-xs text-muted-foreground">{t('debts.plan.extraHint')}</p>
             </div>
-
-            <Button type="submit" disabled={!canCalculate || isFetching}>
+            <Button type="submit" disabled={pending === extra || isFetching}>
               {isFetching ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               {isFetching ? t('debts.plan.calculating') : t('debts.plan.calculate')}
             </Button>
           </form>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-muted-foreground">{t('debts.plan.quick')}</span>
+            {quickOptions.map((option) => (
+              <Button
+                key={option.label}
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => applyExtra(option.value)}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
-      {data.savingsVsMinimumsMinorUnits > 0 ? (
-        <Card className="bg-primary/[0.07]">
+      {applied === 0 ? (
+        <Card>
           <CardContent>
-            <p className="font-medium text-primary">
-              {t('debts.plan.savings', {
-                amount: formatMoneyLocale(data.savingsVsMinimumsMinorUnits, currency),
-                months: data.monthsSavedVsMinimums,
+            <p className="text-sm text-muted-foreground">{t('debts.plan.noExtra')}</p>
+          </CardContent>
+        </Card>
+      ) : tooSmall ? (
+        <Card className="bg-amber-500/10">
+          <CardContent>
+            <p className="text-sm font-medium">
+              {t('debts.plan.tooSmall', {
+                amount: formatMoneyLocale(applied, currency),
+                suggested: formatMoneyLocale(suggested, currency),
               })}
             </p>
           </CardContent>
         </Card>
-      ) : null}
+      ) : (
+        <Card className="bg-primary/[0.07]">
+          <CardContent className="space-y-1">
+            <p className="text-lg font-semibold text-primary">
+              {t('debts.plan.savingTitle', { amount: formatMoneyLocale(saving, currency) })}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {monthsSaved > 0
+                ? t('debts.plan.savingMonths', { months: monthsSaved })
+                : t('debts.plan.savingNoMonths')}
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2 rounded-lg bg-accent/50 p-3">
+            <Info className="mt-0.5 h-4 w-4 shrink-0 text-accent-foreground" aria-hidden="true" />
+            <div>
+              <p className="text-sm font-medium">{t('debts.plan.howTitle')}</p>
+              <p className="text-sm text-muted-foreground">{t('debts.plan.howText')}</p>
+            </div>
+          </div>
+
+          <div>
+            <p className="font-medium">{t('debts.plan.costTitle')}</p>
+            <p className="text-sm text-muted-foreground">{t('debts.plan.costHint')}</p>
+          </div>
+
+          <ul className="space-y-2.5">
+            {debtsByCost.map((debt, index) => {
+              const interest = monthlyInterestMinorUnits(
+                debt.balanceMinorUnits,
+                debt.monthlyRateMicro,
+              );
+              return (
+                <li key={debt.id} className="space-y-1">
+                  <div className="flex items-center justify-between gap-2 text-sm">
+                    <span className="truncate">
+                      {index + 1}. {debt.name}
+                    </span>
+                    <span
+                      className={cn(
+                        'tabular shrink-0 font-medium',
+                        index === 0 ? 'text-destructive' : 'text-muted-foreground',
+                      )}
+                    >
+                      {t('debts.plan.perMonth', {
+                        amount: formatMoneyLocale(interest, currency),
+                      })}
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className={cn(
+                        'h-full rounded-full',
+                        index === 0 ? 'bg-destructive' : 'bg-muted-foreground/40',
+                      )}
+                      style={{ width: `${maxInterest > 0 ? (interest / maxInterest) * 100 : 0}%` }}
+                    />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </CardContent>
+      </Card>
 
       <div className={cn('grid gap-4 lg:grid-cols-3', isFetching && 'opacity-60')}>
-        <PlanCard title={t('debts.plan.minimumsOnly')} plan={minimumsOnly} />
-        <PlanCard
-          title={t('debts.plan.avalanche')}
-          hint={t('debts.plan.avalancheHint')}
-          plan={avalanche}
-          recommended
-          icon={TrendingDown}
+        <StrategyCard
+          title={t('debts.plan.planNothing')}
+          hint={t('debts.plan.planNothingHint')}
+          plan={minimumsOnly}
+          maxMonths={maxMonths}
+          footer={{
+            text: t('debts.plan.costsMore', {
+              amount: formatMoneyLocale(minimumsOnly.totalInterestMinorUnits - bestInterest, currency),
+            }),
+            className: 'text-destructive',
+          }}
         />
-        <PlanCard
-          title={t('debts.plan.snowball')}
-          hint={t('debts.plan.snowballHint')}
+        <StrategyCard
+          title={t('debts.plan.planAvalanche')}
+          hint={t('debts.plan.planAvalancheHint')}
+          plan={avalanche}
+          maxMonths={maxMonths}
+          highlighted
+          badge={{ label: t('debts.plan.best'), className: 'bg-primary/15 text-primary' }}
+          startName={avalanche.payoffOrder[0]?.name}
+          footer={{
+            text: t('debts.plan.saves', {
+              amount: formatMoneyLocale(
+                minimumsOnly.totalInterestMinorUnits - avalanche.totalInterestMinorUnits,
+                currency,
+              ),
+            }),
+            className: 'text-primary',
+          }}
+        />
+        <StrategyCard
+          title={t('debts.plan.planSnowball')}
+          hint={t('debts.plan.planSnowballHint')}
           plan={snowball}
-          icon={Snowflake}
+          maxMonths={maxMonths}
+          startName={snowball.payoffOrder[0]?.name}
+          footer={{
+            text: t('debts.plan.costsMore', {
+              amount: formatMoneyLocale(snowball.totalInterestMinorUnits - bestInterest, currency),
+            }),
+            className: 'text-muted-foreground',
+          }}
         />
       </div>
     </div>

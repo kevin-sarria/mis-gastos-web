@@ -91,7 +91,16 @@ export interface PayoffResult {
   schedule: { period: number; totalPaymentMinorUnits: number; totalInterestMinorUnits: number; totalBalanceMinorUnits: number }[];
 }
 
+export interface PayoffPlanDebt {
+  id: string;
+  name: string;
+  balanceMinorUnits: number;
+  monthlyRateMicro: number;
+  installmentMinorUnits: number;
+}
+
 export interface PayoffPlan {
+  debts: PayoffPlanDebt[];
   extraMonthlyMinorUnits: number;
   totalBalanceMinorUnits: number;
   totalMonthlyPaymentMinorUnits: number;
@@ -118,4 +127,12 @@ export function percentToMicro(percent: number): number {
 export function formatRate(micro: number): string {
   const percent = microToPercent(micro);
   return Number.isInteger(percent) ? `${percent}%` : `${percent.toFixed(2)}%`;
+}
+
+/**
+ * Lo que una deuda te cobra de intereses en un mes.
+ * Es LA cifra que explica por qué conviene atacar primero la más cara.
+ */
+export function monthlyInterestMinorUnits(balanceMinorUnits: number, rateMicro: number): number {
+  return Math.round((balanceMinorUnits * rateMicro) / 1_000_000);
 }
