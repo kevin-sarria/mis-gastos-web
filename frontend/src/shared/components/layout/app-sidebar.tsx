@@ -7,7 +7,7 @@ export function AppSidebarContent() {
   const { t } = useTranslation();
 
   return (
-    <div className="flex h-full flex-col gap-2 p-4">
+    <div className="flex min-h-full flex-col gap-2 p-4">
       <div className="flex items-center gap-2 px-2 py-3">
         <span className="text-lg font-semibold">{t('app.name')}</span>
       </div>
@@ -40,7 +40,7 @@ export function AppSidebarContent() {
 
 export function AppSidebar() {
   return (
-    <aside className="hidden w-60 shrink-0 border-r md:block">
+    <aside className="hidden w-60 shrink-0 overflow-y-auto border-r md:block">
       <AppSidebarContent />
     </aside>
   );
