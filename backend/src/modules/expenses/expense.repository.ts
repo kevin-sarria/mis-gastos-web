@@ -31,16 +31,27 @@ export const expenseRepository = {
 
   async update(id: string, userId: string, data: ExpenseUpdateInput) {
     const { tags, ...rest } = data;
-    await prisma.expense.updateMany({
+
+    // updateMany no admite escrituras anidadas, así que comprobamos la
+    // propiedad primero y luego usamos update (que sí las soporta).
+    const existing = await prisma.expense.findFirst({
       where: { id, userId },
+      select: { id: true },
+    });
+    if (!existing) {
+      return null;
+    }
+
+    return prisma.expense.update({
+      where: { id },
       data: {
         ...rest,
         ...(tags
           ? { tags: { deleteMany: {}, create: tags.map((tag) => ({ tag })) } }
           : {}),
       },
+      include,
     });
-    return prisma.expense.findFirst({ where: { id, userId }, include });
   },
 
   remove(id: string, userId: string) {
