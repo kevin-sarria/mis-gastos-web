@@ -1,5 +1,6 @@
 import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,12 +15,10 @@ import { Label } from '@/components/ui/label';
 import { CategoryDot } from '@/features/categories/components/category-dot';
 import { CategoryForm } from '@/features/categories/components/category-form';
 import type { Category, CategoryType } from '@/features/categories/domain/category';
-import {
-  useCategories,
-  useDeleteCategory,
-} from '@/features/categories/hooks/use-categories';
+import { useCategories, useDeleteCategory } from '@/features/categories/hooks/use-categories';
 
 export function CategoryManager() {
+  const { t } = useTranslation();
   const { data: incomeCategories = [] } = useCategories('INCOME');
   const { data: expenseCategories = [] } = useCategories('EXPENSE');
   const deleteCategory = useDeleteCategory();
@@ -36,7 +35,9 @@ export function CategoryManager() {
           <span className="flex min-w-0 items-center gap-2">
             <CategoryDot color={category.color} />
             <span className="truncate text-sm">{category.name}</span>
-            {category.isDefault ? <Badge variant="secondary">Por defecto</Badge> : null}
+            {category.isDefault ? (
+              <Badge variant="secondary">{t('common.default')}</Badge>
+            ) : null}
           </span>
 
           {category.isDefault ? null : (
@@ -44,7 +45,7 @@ export function CategoryManager() {
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label="Editar categoría"
+                aria-label={t('categories.edit')}
                 onClick={() => {
                   setEditing(category);
                   setEditOpen(true);
@@ -55,7 +56,7 @@ export function CategoryManager() {
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label="Borrar categoría"
+                aria-label={t('common.delete')}
                 onClick={() => deleteCategory.mutate(category.id)}
               >
                 <Trash2 className="h-4 w-4 text-muted-foreground" />
@@ -70,18 +71,18 @@ export function CategoryManager() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
-        <CardTitle>Categorías</CardTitle>
+        <CardTitle>{t('categories.title')}</CardTitle>
         <Button size="sm" onClick={() => setCreateOpen(true)}>
-          Nueva categoría
+          {t('categories.new')}
         </Button>
       </CardHeader>
       <CardContent className="space-y-6">
         <div>
-          <p className="mb-2 text-sm font-medium">Ingresos</p>
+          <p className="mb-2 text-sm font-medium">{t('common.income')}</p>
           {renderList(incomeCategories)}
         </div>
         <div>
-          <p className="mb-2 text-sm font-medium">Gastos</p>
+          <p className="mb-2 text-sm font-medium">{t('common.expense')}</p>
           {renderList(expenseCategories)}
         </div>
       </CardContent>
@@ -89,8 +90,8 @@ export function CategoryManager() {
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Editar categoría</DialogTitle>
-            <DialogDescription>Cambia el nombre o el color.</DialogDescription>
+            <DialogTitle>{t('categories.edit')}</DialogTitle>
+            <DialogDescription>{t('categories.editDescription')}</DialogDescription>
           </DialogHeader>
           {editing ? (
             <CategoryForm
@@ -105,11 +106,11 @@ export function CategoryManager() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Nueva categoría</DialogTitle>
-            <DialogDescription>Elige el tipo, el nombre y el color.</DialogDescription>
+            <DialogTitle>{t('categories.new')}</DialogTitle>
+            <DialogDescription>{t('categories.createDescription')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <Label>Tipo</Label>
+            <Label>{t('common.type')}</Label>
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -117,7 +118,7 @@ export function CategoryManager() {
                 variant={newType === 'EXPENSE' ? 'default' : 'outline'}
                 onClick={() => setNewType('EXPENSE')}
               >
-                Gasto
+                {t('common.expenseType')}
               </Button>
               <Button
                 type="button"
@@ -125,7 +126,7 @@ export function CategoryManager() {
                 variant={newType === 'INCOME' ? 'default' : 'outline'}
                 onClick={() => setNewType('INCOME')}
               >
-                Ingreso
+                {t('common.incomeType')}
               </Button>
             </div>
           </div>

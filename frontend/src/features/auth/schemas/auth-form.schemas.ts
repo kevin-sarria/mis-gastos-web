@@ -1,38 +1,44 @@
 import { z } from 'zod';
 
-export const loginSchema = z.object({
-  email: z.string().trim().toLowerCase().email('Correo inválido'),
-  password: z.string().min(1, 'Escribe tu contraseña'),
-});
+type TranslateFn = (key: string) => string;
 
-export const registerSchema = z
-  .object({
-    name: z.string().trim().min(2, 'Mínimo 2 caracteres').max(80),
-    email: z.string().trim().toLowerCase().email('Correo inválido'),
-    password: z.string().min(8, 'Mínimo 8 caracteres').max(128),
-    confirmPassword: z.string(),
-    currencyCode: z.string().min(1, 'Elige una moneda'),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Las contraseñas no coinciden',
-    path: ['confirmPassword'],
+export const createLoginSchema = (t: TranslateFn) =>
+  z.object({
+    email: z.string().trim().toLowerCase().email(t('validation.email')),
+    password: z.string().min(1, t('validation.required')),
   });
 
-export const forgotPasswordSchema = z.object({
-  email: z.string().trim().toLowerCase().email('Correo inválido'),
-});
+export const createRegisterSchema = (t: TranslateFn) =>
+  z
+    .object({
+      name: z.string().trim().min(2, t('validation.min2')).max(80),
+      email: z.string().trim().toLowerCase().email(t('validation.email')),
+      password: z.string().min(8, t('validation.min8')).max(128),
+      confirmPassword: z.string(),
+      currencyCode: z.string().min(1, t('validation.chooseCurrency')),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t('validation.passwordsDontMatch'),
+      path: ['confirmPassword'],
+    });
 
-export const resetPasswordSchema = z
-  .object({
-    password: z.string().min(8, 'Mínimo 8 caracteres').max(128),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Las contraseñas no coinciden',
-    path: ['confirmPassword'],
+export const createForgotPasswordSchema = (t: TranslateFn) =>
+  z.object({
+    email: z.string().trim().toLowerCase().email(t('validation.email')),
   });
 
-export type LoginFormValues = z.infer<typeof loginSchema>;
-export type RegisterFormValues = z.infer<typeof registerSchema>;
-export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
-export type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
+export const createResetPasswordSchema = (t: TranslateFn) =>
+  z
+    .object({
+      password: z.string().min(8, t('validation.min8')).max(128),
+      confirmPassword: z.string(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t('validation.passwordsDontMatch'),
+      path: ['confirmPassword'],
+    });
+
+export type LoginFormValues = z.infer<ReturnType<typeof createLoginSchema>>;
+export type RegisterFormValues = z.infer<ReturnType<typeof createRegisterSchema>>;
+export type ForgotPasswordFormValues = z.infer<ReturnType<typeof createForgotPasswordSchema>>;
+export type ResetPasswordFormValues = z.infer<ReturnType<typeof createResetPasswordSchema>>;

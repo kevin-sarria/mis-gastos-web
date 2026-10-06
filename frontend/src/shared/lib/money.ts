@@ -6,11 +6,12 @@ export interface MoneyCurrency {
 export function formatMoney(
   minorUnits: number,
   currency: MoneyCurrency | null | undefined,
+  locale = 'es-ES',
 ): string {
   const decimals = currency?.minorUnits ?? 2;
   const symbol = currency?.symbol ?? '';
   const value = minorUnits / 10 ** decimals;
-  const formatted = value.toLocaleString('es-ES', {
+  const formatted = value.toLocaleString(locale, {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });

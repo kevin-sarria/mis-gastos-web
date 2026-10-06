@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
@@ -9,17 +10,17 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { messageFromError } from '@/shared/lib/error-message';
 import type { Category, CategoryType } from '../domain/category';
-import {
-  CATEGORY_COLOR_PRESETS,
-  DEFAULT_CATEGORY_COLOR,
-} from '../domain/category-colors';
+import { CATEGORY_COLOR_PRESETS, DEFAULT_CATEGORY_COLOR } from '../domain/category-colors';
 import { useCreateCategory, useUpdateCategory } from '../hooks/use-categories';
 
-const categoryFormSchema = z.object({
-  name: z.string().trim().min(2, 'Mínimo 2 caracteres').max(60),
-});
+type TranslateFn = (key: string) => string;
 
-type CategoryFormValues = z.infer<typeof categoryFormSchema>;
+const createCategoryFormSchema = (t: TranslateFn) =>
+  z.object({
+    name: z.string().trim().min(2, t('validation.min2')).max(60),
+  });
+
+type CategoryFormValues = z.infer<ReturnType<typeof createCategoryFormSchema>>;
 
 interface CategoryFormProps {
   type: CategoryType;
@@ -28,12 +29,15 @@ interface CategoryFormProps {
 }
 
 export function CategoryForm({ type, category, onSaved }: CategoryFormProps) {
+  const { t } = useTranslation();
   const createCategory = useCreateCategory();
   const updateCategory = useUpdateCategory();
   const [color, setColor] = useState<string>(category?.color ?? DEFAULT_CATEGORY_COLOR);
 
+  const schema = useMemo(() => createCategoryFormSchema(t), [t]);
+
   const form = useForm<CategoryFormValues>({
-    resolver: zodResolver(categoryFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: { name: category?.name ?? '' },
   });
 
@@ -46,34 +50,38 @@ export function CategoryForm({ type, category, onSaved }: CategoryFormProps) {
           })
         : await createCategory.mutateAsync({ type, name: values.name, color });
 
-      toast.success(category ? 'Categoría actualizada' : 'Categoría creada');
+      toast.success(t(category ? 'categories.updated' : 'categories.created'));
       form.reset();
       setColor(DEFAULT_CATEGORY_COLOR);
       onSaved?.(saved);
     } catch (error) {
-      toast.error(messageFromError(error));
+      toast.error(messageFromError(error, t));
     }
   });
 
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       <div className="space-y-2">
-        <Label htmlFor="category-name">Nombre</Label>
-        <Input id="category-name" placeholder="Ej. Mascotas" {...form.register('name')} />
+        <Label htmlFor="category-name">{t('categories.name')}</Label>
+        <Input
+          id="category-name"
+          placeholder={t('categories.namePlaceholder')}
+          {...form.register('name')}
+        />
         {form.formState.errors.name ? (
           <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
         ) : null}
       </div>
 
       <div className="space-y-2">
-        <Label>Color</Label>
+        <Label>{t('categories.color')}</Label>
         <div className="flex flex-wrap gap-2">
           {CATEGORY_COLOR_PRESETS.map((preset) => (
             <button
               key={preset}
               type="button"
               onClick={() => setColor(preset)}
-              aria-label={`Elegir color ${preset}`}
+              aria-label={t('categories.chooseColor', { color: preset })}
               aria-pressed={color === preset}
               className={cn(
                 'h-7 w-7 rounded-full border-2 transition-transform',
@@ -88,7 +96,7 @@ export function CategoryForm({ type, category, onSaved }: CategoryFormProps) {
       </div>
 
       <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-        {category ? 'Guardar cambios' : 'Crear categoría'}
+        {t(category ? 'common.saveChanges' : 'categories.create')}
       </Button>
     </form>
   );

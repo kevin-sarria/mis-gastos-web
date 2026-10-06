@@ -16,10 +16,10 @@ export function ThemeToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={t('theme.light')}>
+        <Button variant="ghost" size="icon" aria-label={t('theme.toggle')}>
           <Sun className="h-5 w-5 scale-100 transition-all dark:scale-0" />
           <Moon className="absolute h-5 w-5 scale-0 transition-all dark:scale-100" />
-          <span className="sr-only">{t('theme.system')}</span>
+          <span className="sr-only">{t('theme.toggle')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

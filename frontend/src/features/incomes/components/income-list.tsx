@@ -1,8 +1,9 @@
 import { Pencil, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/store/auth-context';
 import { DEFAULT_CATEGORY_COLOR } from '@/features/categories/domain/category-colors';
-import { formatMoney } from '@/shared/lib/money';
+import { formatDate, formatMoneyLocale } from '@/shared/lib/format';
 import type { Income } from '../domain/income';
 import { useDeleteIncome } from '../hooks/use-incomes';
 
@@ -13,6 +14,7 @@ interface IncomeListProps {
 
 export function IncomeList({ incomes, onEdit }: IncomeListProps) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const deleteIncome = useDeleteIncome();
 
   return (
@@ -26,19 +28,18 @@ export function IncomeList({ incomes, onEdit }: IncomeListProps) {
           <div className="min-w-0">
             <p className="truncate font-medium">{income.title}</p>
             <p className="text-sm text-muted-foreground">
-              {income.category?.name ?? 'Sin categoría'} ·{' '}
-              {new Date(income.date).toLocaleDateString('es')}
+              {income.category?.name ?? t('common.noCategory')} · {formatDate(income.date)}
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-1">
             <span className="mr-1 font-semibold">
-              {formatMoney(income.amountMinorUnits, user?.currency)}
+              {formatMoneyLocale(income.amountMinorUnits, user?.currency)}
             </span>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => onEdit?.(income)}
-              aria-label="Editar ingreso"
+              aria-label={t('incomes.editLabel')}
             >
               <Pencil className="h-4 w-4 text-muted-foreground" />
             </Button>
@@ -46,7 +47,7 @@ export function IncomeList({ incomes, onEdit }: IncomeListProps) {
               variant="ghost"
               size="icon"
               onClick={() => deleteIncome.mutate(income.id)}
-              aria-label="Eliminar ingreso"
+              aria-label={t('incomes.deleteLabel')}
             >
               <Trash2 className="h-4 w-4 text-muted-foreground" />
             </Button>

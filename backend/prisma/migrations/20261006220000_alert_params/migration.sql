@@ -1,0 +1,2 @@
+ALTER TABLE `alert` MODIFY `message` TEXT NULL;
+ALTER TABLE `alert` ADD COLUMN `params` JSON NULL;

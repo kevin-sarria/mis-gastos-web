@@ -1,11 +1,11 @@
 import { Paperclip, Pencil, Trash2, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/store/auth-context';
 import { DEFAULT_CATEGORY_COLOR } from '@/features/categories/domain/category-colors';
 import { useDeleteAttachment, useUploadAttachment } from '@/features/files/hooks/use-files';
-import { formatMoney } from '@/shared/lib/money';
-import { EXPENSE_TAG_LABELS } from '../domain/expense';
+import { formatDate, formatMoneyLocale } from '@/shared/lib/format';
 import type { Expense } from '../domain/expense';
 import { useDeleteExpense } from '../hooks/use-expenses';
 
@@ -16,6 +16,7 @@ interface ExpenseListProps {
 
 export function ExpenseList({ expenses, onEdit }: ExpenseListProps) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const deleteExpense = useDeleteExpense();
   const uploadAttachment = useUploadAttachment();
   const deleteAttachment = useDeleteAttachment();
@@ -32,15 +33,14 @@ export function ExpenseList({ expenses, onEdit }: ExpenseListProps) {
             <div className="min-w-0">
               <p className="truncate font-medium">{expense.title}</p>
               <p className="text-sm text-muted-foreground">
-                {expense.category?.name ?? 'Sin categoría'} ·{' '}
-                {new Date(expense.date).toLocaleDateString('es')}
+                {expense.category?.name ?? t('common.noCategory')} · {formatDate(expense.date)}
               </p>
 
               {expense.tags.length > 0 ? (
                 <div className="mt-1 flex flex-wrap gap-1">
                   {expense.tags.map((tag) => (
                     <Badge key={tag} variant="secondary">
-                      {EXPENSE_TAG_LABELS[tag]}
+                      {t(`expenses.tagsLabel.${tag}`)}
                     </Badge>
                   ))}
                 </div>
@@ -57,14 +57,14 @@ export function ExpenseList({ expenses, onEdit }: ExpenseListProps) {
                           className="h-12 w-12 rounded border object-cover"
                         />
                       ) : (
-                        <Badge variant="outline">Ver factura</Badge>
+                        <Badge variant="outline">{t('common.viewInvoice')}</Badge>
                       )}
                     </a>
                     <button
                       type="button"
                       onClick={() => deleteAttachment.mutate(attachment.id)}
                       className="absolute -top-1.5 -right-1.5 rounded-full bg-destructive p-0.5 text-white"
-                      aria-label="Quitar factura"
+                      aria-label={t('common.removeInvoice')}
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -73,7 +73,7 @@ export function ExpenseList({ expenses, onEdit }: ExpenseListProps) {
 
                 <label className="inline-flex cursor-pointer items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                   <Paperclip className="h-3.5 w-3.5" />
-                  Añadir factura
+                  {t('common.addAttachment')}
                   <input
                     type="file"
                     className="hidden"
@@ -92,13 +92,13 @@ export function ExpenseList({ expenses, onEdit }: ExpenseListProps) {
 
             <div className="flex shrink-0 items-center gap-1">
               <span className="mr-1 font-semibold">
-                {formatMoney(expense.amountMinorUnits, user?.currency)}
+                {formatMoneyLocale(expense.amountMinorUnits, user?.currency)}
               </span>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => onEdit?.(expense)}
-                aria-label="Editar gasto"
+                aria-label={t('expenses.editLabel')}
               >
                 <Pencil className="h-4 w-4 text-muted-foreground" />
               </Button>
@@ -106,7 +106,7 @@ export function ExpenseList({ expenses, onEdit }: ExpenseListProps) {
                 variant="ghost"
                 size="icon"
                 onClick={() => deleteExpense.mutate(expense.id)}
-                aria-label="Eliminar gasto"
+                aria-label={t('expenses.deleteLabel')}
               >
                 <Trash2 className="h-4 w-4 text-muted-foreground" />
               </Button>

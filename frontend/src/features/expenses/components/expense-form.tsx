@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,10 +12,9 @@ import { CategorySelect } from '@/features/categories/components/category-select
 import { httpFileApi } from '@/features/files/api/file-api';
 import { CurrencyInput } from '@/shared/components/currency-input';
 import { messageFromError } from '@/shared/lib/error-message';
-import { EXPENSE_TAG_LABELS } from '../domain/expense';
 import type { Expense, ExpenseTag } from '../domain/expense';
 import { useCreateExpense, useUpdateExpense } from '../hooks/use-expenses';
-import { expenseFormSchema, type ExpenseFormValues } from '../schemas/expense-form.schema';
+import { createExpenseFormSchema, type ExpenseFormValues } from '../schemas/expense-form.schema';
 
 const TAG_OPTIONS: ExpenseTag[] = ['FIXED', 'VARIABLE', 'EMERGENCY', 'ANT_EXPENSE'];
 
@@ -53,13 +53,16 @@ interface ExpenseFormProps {
 
 export function ExpenseForm({ expense, onDone }: ExpenseFormProps) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const minorUnits = user?.currency?.minorUnits ?? 2;
   const createExpense = useCreateExpense();
   const updateExpense = useUpdateExpense();
   const [file, setFile] = useState<File | null>(null);
 
+  const schema = useMemo(() => createExpenseFormSchema(t), [t]);
+
   const form = useForm<ExpenseFormValues>({
-    resolver: zodResolver(expenseFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: defaultValuesFrom(expense),
   });
 
@@ -93,28 +96,28 @@ export function ExpenseForm({ expense, onDone }: ExpenseFormProps) {
         }
       }
 
-      toast.success(expense ? 'Gasto actualizado' : 'Gasto registrado');
+      toast.success(t(expense ? 'expenses.updated' : 'expenses.created'));
       form.reset();
       form.clearErrors();
       setFile(null);
       onDone?.();
     } catch (error) {
-      toast.error(messageFromError(error));
+      toast.error(messageFromError(error, t));
     }
   });
 
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       <div className="space-y-2">
-        <Label htmlFor="title">Título</Label>
-        <Input id="title" placeholder="Ej. Compra del supermercado" {...form.register('title')} />
+        <Label htmlFor="title">{t('expenses.titleLabel')}</Label>
+        <Input id="title" placeholder={t('expenses.titlePlaceholder')} {...form.register('title')} />
         {form.formState.errors.title ? (
           <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>
         ) : null}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="amount">Monto</Label>
+        <Label htmlFor="amount">{t('expenses.amount')}</Label>
         <Controller
           control={form.control}
           name="amount"
@@ -134,7 +137,7 @@ export function ExpenseForm({ expense, onDone }: ExpenseFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label>Categoría</Label>
+        <Label>{t('expenses.category')}</Label>
         <CategorySelect
           id="categoryId"
           type="EXPENSE"
@@ -147,7 +150,7 @@ export function ExpenseForm({ expense, onDone }: ExpenseFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label>Etiquetas</Label>
+        <Label>{t('expenses.tags')}</Label>
         <div className="flex flex-wrap gap-2">
           {TAG_OPTIONS.map((tag) => (
             <Button
@@ -157,14 +160,14 @@ export function ExpenseForm({ expense, onDone }: ExpenseFormProps) {
               variant={tags.includes(tag) ? 'default' : 'outline'}
               onClick={() => toggleTag(tag)}
             >
-              {EXPENSE_TAG_LABELS[tag]}
+              {t(`expenses.tagsLabel.${tag}`)}
             </Button>
           ))}
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="date">Fecha</Label>
+        <Label htmlFor="date">{t('expenses.date')}</Label>
         <Input id="date" type="date" {...form.register('date')} />
         {form.formState.errors.date ? (
           <p className="text-sm text-destructive">{form.formState.errors.date.message}</p>
@@ -172,17 +175,17 @@ export function ExpenseForm({ expense, onDone }: ExpenseFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="justification">Justificación (opcional)</Label>
+        <Label htmlFor="justification">{t('expenses.justification')}</Label>
         <Textarea
           id="justification"
-          placeholder="¿Por qué fue necesario este gasto?"
+          placeholder={t('expenses.justificationPlaceholder')}
           {...form.register('justification')}
         />
       </div>
 
       {expense ? null : (
         <div className="space-y-2">
-          <Label htmlFor="file">Factura (PDF o imagen, máx. 10 MB)</Label>
+          <Label htmlFor="file">{t('expenses.invoice')}</Label>
           <Input
             id="file"
             type="file"
@@ -193,7 +196,7 @@ export function ExpenseForm({ expense, onDone }: ExpenseFormProps) {
       )}
 
       <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-        {expense ? 'Guardar cambios' : 'Guardar gasto'}
+        {t(expense ? 'common.saveChanges' : 'expenses.submit')}
       </Button>
     </form>
   );

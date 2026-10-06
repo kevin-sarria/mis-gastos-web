@@ -1,5 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,15 +11,18 @@ import { CategorySelect } from '@/features/categories/components/category-select
 import { CurrencyInput } from '@/shared/components/currency-input';
 import { messageFromError } from '@/shared/lib/error-message';
 import { useCreateBudget } from '../hooks/use-budgets';
-import { budgetFormSchema, type BudgetFormValues } from '../schemas/budget-form.schema';
+import { createBudgetFormSchema, type BudgetFormValues } from '../schemas/budget-form.schema';
 
 export function BudgetForm({ onDone }: { onDone?: () => void }) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const minorUnits = user?.currency?.minorUnits ?? 2;
   const createBudget = useCreateBudget();
 
+  const schema = useMemo(() => createBudgetFormSchema(t), [t]);
+
   const form = useForm<BudgetFormValues>({
-    resolver: zodResolver(budgetFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: { name: '', amount: '', categoryId: 'global', alertThresholdPct: 80 },
   });
 
@@ -30,27 +35,27 @@ export function BudgetForm({ onDone }: { onDone?: () => void }) {
         period: 'MONTHLY',
         alertThresholdPct: values.alertThresholdPct,
       });
-      toast.success('Presupuesto creado');
+      toast.success(t('budgets.created'));
       form.reset();
       form.clearErrors();
       onDone?.();
     } catch (error) {
-      toast.error(messageFromError(error));
+      toast.error(messageFromError(error, t));
     }
   });
 
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       <div className="space-y-2">
-        <Label htmlFor="name">Nombre</Label>
-        <Input id="name" placeholder="Ej. Alimentación" {...form.register('name')} />
+        <Label htmlFor="name">{t('budgets.name')}</Label>
+        <Input id="name" placeholder={t('budgets.namePlaceholder')} {...form.register('name')} />
         {form.formState.errors.name ? (
           <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
         ) : null}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="amount">Límite mensual</Label>
+        <Label htmlFor="amount">{t('budgets.limit')}</Label>
         <Controller
           control={form.control}
           name="amount"
@@ -70,7 +75,7 @@ export function BudgetForm({ onDone }: { onDone?: () => void }) {
       </div>
 
       <div className="space-y-2">
-        <Label>Categoría</Label>
+        <Label>{t('budgets.category')}</Label>
         <CategorySelect
           id="categoryId"
           type="EXPENSE"
@@ -81,7 +86,7 @@ export function BudgetForm({ onDone }: { onDone?: () => void }) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="alertThresholdPct">Alerta al alcanzar (%)</Label>
+        <Label htmlFor="alertThresholdPct">{t('budgets.threshold')}</Label>
         <Input
           id="alertThresholdPct"
           type="number"
@@ -97,7 +102,7 @@ export function BudgetForm({ onDone }: { onDone?: () => void }) {
       </div>
 
       <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-        Guardar presupuesto
+        {t('budgets.submit')}
       </Button>
     </form>
   );

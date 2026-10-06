@@ -8,6 +8,7 @@ export class AppError extends Error {
     this.name = 'AppError';
     this.statusCode = statusCode;
     this.code = code;
+    this.message = message;
     this.details = details;
     Error.captureStackTrace(this, this.constructor);
   }
@@ -21,15 +22,15 @@ export class NotFoundError extends AppError {
 }
 
 export class ValidationError extends AppError {
-  constructor(message = 'Datos de entrada inválidos', details?: unknown) {
-    super(400, 'VALIDATION_ERROR', message, details);
+  constructor(message = 'Datos de entrada inválidos', code = 'VALIDATION_ERROR', details?: unknown) {
+    super(400, code, message, details);
     this.name = 'ValidationError';
   }
 }
 
 export class UnauthorizedError extends AppError {
-  constructor(message = 'No autenticado') {
-    super(401, 'UNAUTHORIZED', message);
+  constructor(message = 'No autenticado', code = 'UNAUTHORIZED') {
+    super(401, code, message);
     this.name = 'UnauthorizedError';
   }
 }
@@ -42,8 +43,8 @@ export class ForbiddenError extends AppError {
 }
 
 export class ConflictError extends AppError {
-  constructor(message = 'El recurso ya existe') {
-    super(409, 'CONFLICT', message);
+  constructor(message = 'El recurso ya existe', code = 'CONFLICT') {
+    super(409, code, message);
     this.name = 'ConflictError';
   }
 }

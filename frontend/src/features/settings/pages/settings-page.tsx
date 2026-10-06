@@ -2,9 +2,9 @@ import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/features/auth/store/auth-context';
 import { CategoryManager } from '../components/category-manager';
+import { CurrencyManager } from '../components/currency-manager';
 import { PasswordForm } from '../components/password-form';
 import { ProfileForm } from '../components/profile-form';
-import { CurrencyManager } from '../components/currency-manager';
 
 export function SettingsPage() {
   const { t } = useTranslation();
@@ -13,13 +13,13 @@ export function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{t('pages.settings.title')}</h1>
-        <p className="text-sm text-muted-foreground">{t('pages.settings.description')}</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t('settings.title')}</h1>
+        <p className="text-sm text-muted-foreground">{t('settings.description')}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Perfil</CardTitle>
+          <CardTitle>{t('settings.profile')}</CardTitle>
         </CardHeader>
         <CardContent>
           <ProfileForm />
@@ -28,7 +28,7 @@ export function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Contraseña</CardTitle>
+          <CardTitle>{t('settings.password')}</CardTitle>
         </CardHeader>
         <CardContent>
           <PasswordForm />

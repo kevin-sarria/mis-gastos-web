@@ -1,5 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +13,7 @@ import { CurrencyInput } from '@/shared/components/currency-input';
 import { messageFromError } from '@/shared/lib/error-message';
 import type { Income } from '../domain/income';
 import { useCreateIncome, useUpdateIncome } from '../hooks/use-incomes';
-import { incomeFormSchema, type IncomeFormValues } from '../schemas/income-form.schema';
+import { createIncomeFormSchema, type IncomeFormValues } from '../schemas/income-form.schema';
 
 function todayInputValue(): string {
   const now = new Date();
@@ -40,12 +42,15 @@ interface IncomeFormProps {
 
 export function IncomeForm({ income, onDone }: IncomeFormProps) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const minorUnits = user?.currency?.minorUnits ?? 2;
   const createIncome = useCreateIncome();
   const updateIncome = useUpdateIncome();
 
+  const schema = useMemo(() => createIncomeFormSchema(t), [t]);
+
   const form = useForm<IncomeFormValues>({
-    resolver: zodResolver(incomeFormSchema),
+    resolver: zodResolver(schema),
     defaultValues: defaultValuesFrom(income),
   });
 
@@ -65,27 +70,27 @@ export function IncomeForm({ income, onDone }: IncomeFormProps) {
         await createIncome.mutateAsync(payload);
       }
 
-      toast.success(income ? 'Ingreso actualizado' : 'Ingreso registrado');
+      toast.success(t(income ? 'incomes.updated' : 'incomes.created'));
       form.reset();
       form.clearErrors();
       onDone?.();
     } catch (error) {
-      toast.error(messageFromError(error));
+      toast.error(messageFromError(error, t));
     }
   });
 
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       <div className="space-y-2">
-        <Label htmlFor="title">Título</Label>
-        <Input id="title" placeholder="Ej. Sueldo de octubre" {...form.register('title')} />
+        <Label htmlFor="title">{t('incomes.titleLabel')}</Label>
+        <Input id="title" placeholder={t('incomes.titlePlaceholder')} {...form.register('title')} />
         {form.formState.errors.title ? (
           <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>
         ) : null}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="amount">Monto</Label>
+        <Label htmlFor="amount">{t('incomes.amount')}</Label>
         <Controller
           control={form.control}
           name="amount"
@@ -105,7 +110,7 @@ export function IncomeForm({ income, onDone }: IncomeFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label>Categoría</Label>
+        <Label>{t('incomes.category')}</Label>
         <CategorySelect
           id="categoryId"
           type="INCOME"
@@ -118,7 +123,7 @@ export function IncomeForm({ income, onDone }: IncomeFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="date">Fecha</Label>
+        <Label htmlFor="date">{t('incomes.date')}</Label>
         <Input id="date" type="date" {...form.register('date')} />
         {form.formState.errors.date ? (
           <p className="text-sm text-destructive">{form.formState.errors.date.message}</p>
@@ -126,12 +131,12 @@ export function IncomeForm({ income, onDone }: IncomeFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="note">Nota (opcional)</Label>
+        <Label htmlFor="note">{t('incomes.note')}</Label>
         <Textarea id="note" {...form.register('note')} />
       </div>
 
       <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-        {income ? 'Guardar cambios' : 'Guardar ingreso'}
+        {t(income ? 'common.saveChanges' : 'incomes.submit')}
       </Button>
     </form>
   );

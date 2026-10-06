@@ -26,19 +26,19 @@ export function BudgetsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t('pages.budgets.title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('pages.budgets.description')}</p>
+          <h1 className="text-2xl font-semibold tracking-tight">{t('budgets.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('budgets.description')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <MonthSwitcher />
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button>Nuevo presupuesto</Button>
+              <Button>{t('budgets.new')}</Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Nuevo presupuesto</DialogTitle>
-                <DialogDescription>Define un límite por categoría o global.</DialogDescription>
+                <DialogTitle>{t('budgets.new')}</DialogTitle>
+                <DialogDescription>{t('budgets.newDescription')}</DialogDescription>
               </DialogHeader>
               <BudgetForm onDone={() => setDialogOpen(false)} />
             </DialogContent>
@@ -47,17 +47,17 @@ export function BudgetsPage() {
       </div>
 
       {isLoading ? (
-        <p className="text-muted-foreground">Cargando…</p>
+        <p className="text-muted-foreground">{t('common.loading')}</p>
       ) : budgets.length === 0 ? (
         <EmptyState
           icon={PiggyBank}
-          title="Aún no hay presupuestos"
-          description="Define límites por categoría para ver cuánto llevas gastado cada mes."
+          title={t('budgets.emptyTitle')}
+          description={t('budgets.emptyDescription')}
         />
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Presupuestos del mes</CardTitle>
+            <CardTitle>{t('budgets.listTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <BudgetList budgets={budgets} />

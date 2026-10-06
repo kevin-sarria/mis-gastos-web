@@ -41,7 +41,11 @@ class AlertService {
         type: 'OVER_BUDGET',
         categoryId: budget.categoryId,
         severity: 'CRITICAL',
-        message: `Superaste el presupuesto "${budget.name}". Llevas ${spending} de ${budget.amountMinorUnits}.`,
+        params: {
+          budgetName: budget.name,
+          spentMinorUnits: spending,
+          limitMinorUnits: budget.amountMinorUnits,
+        },
       });
     } else if (ratio >= budget.alertThresholdPct / 100) {
       await alertRepository.create({
@@ -49,7 +53,11 @@ class AlertService {
         type: 'NEAR_BUDGET',
         categoryId: budget.categoryId,
         severity: 'WARNING',
-        message: `Estás cerca del límite del presupuesto "${budget.name}".`,
+        params: {
+          budgetName: budget.name,
+          spentMinorUnits: spending,
+          limitMinorUnits: budget.amountMinorUnits,
+        },
       });
     }
   }

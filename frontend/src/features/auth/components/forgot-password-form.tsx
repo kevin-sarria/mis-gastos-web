@@ -1,48 +1,51 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { messageFromError } from '@/shared/lib/error-message';
 import { httpAuthApi } from '../api/http-auth-api';
-import { forgotPasswordSchema, type ForgotPasswordFormValues } from '../schemas/auth-form.schemas';
+import {
+  createForgotPasswordSchema,
+  type ForgotPasswordFormValues,
+} from '../schemas/auth-form.schemas';
 
 export function ForgotPasswordForm() {
+  const { t } = useTranslation();
+  const [sent, setSent] = useState(false);
+
+  const schema = useMemo(() => createForgotPasswordSchema(t), [t]);
+
   const form = useForm<ForgotPasswordFormValues>({
-    resolver: zodResolver(forgotPasswordSchema),
+    resolver: zodResolver(schema),
     defaultValues: { email: '' },
   });
-
-  const [sent, setSent] = useState(false);
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
       await httpAuthApi.forgotPassword(values.email);
       setSent(true);
     } catch (error) {
-      toast.error(messageFromError(error));
+      toast.error(messageFromError(error, t));
     }
   });
 
   if (sent) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        Si el correo existe, recibirás un enlace para restablecer tu contraseña.
-      </p>
-    );
+    return <p className="text-sm text-muted-foreground">{t('auth.forgot.sent')}</p>;
   }
 
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       <div className="space-y-2">
-        <Label htmlFor="email">Correo</Label>
+        <Label htmlFor="email">{t('auth.email')}</Label>
         <Input
           id="email"
           type="email"
           autoComplete="email"
-          placeholder="tu@correo.com"
+          placeholder={t('auth.emailPlaceholder')}
           {...form.register('email')}
         />
         {form.formState.errors.email ? (
@@ -50,7 +53,7 @@ export function ForgotPasswordForm() {
         ) : null}
       </div>
       <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-        Enviar enlace
+        {t('auth.forgot.submit')}
       </Button>
     </form>
   );

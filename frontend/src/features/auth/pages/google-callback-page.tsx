@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { tokenStorage } from '@/core/http/token-storage';
@@ -8,6 +9,7 @@ import { useAuth } from '../store/auth-context';
 export function GoogleCallbackPage() {
   const { setSession } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [params] = useSearchParams();
   const ran = useRef(false);
 
@@ -19,7 +21,7 @@ export function GoogleCallbackPage() {
 
     const token = params.get('token');
     if (!token) {
-      toast.error('No se pudo completar el inicio con Google');
+      toast.error(t('auth.googleError'));
       navigate('/login');
       return;
     }
@@ -29,19 +31,19 @@ export function GoogleCallbackPage() {
       .me()
       .then((user) => {
         setSession({ user, accessToken: token });
-        toast.success('Sesión iniciada');
+        toast.success(t('auth.sessionStarted'));
         navigate('/');
       })
       .catch(() => {
         tokenStorage.clear();
-        toast.error('No se pudo completar el inicio con Google');
+        toast.error(t('auth.googleError'));
         navigate('/login');
       });
-  }, [params, navigate, setSession]);
+  }, [params, navigate, setSession, t]);
 
   return (
     <div className="flex min-h-screen items-center justify-center text-muted-foreground">
-      Entrando…
+      {t('auth.entering')}
     </div>
   );
 }

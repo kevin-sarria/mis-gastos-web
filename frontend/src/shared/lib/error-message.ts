@@ -1,11 +1,13 @@
 import { ApiError } from '@/core/errors/api-error';
 
-export function messageFromError(error: unknown): string {
+type TranslateFn = (key: string, options?: { defaultValue?: string }) => string;
+
+export function messageFromError(error: unknown, t: TranslateFn): string {
   if (error instanceof ApiError) {
-    return error.message;
+    return t(`errors.${error.code}`, { defaultValue: error.message });
   }
   if (error instanceof Error) {
     return error.message;
   }
-  return 'Ocurrió un error inesperado';
+  return t('errors.UNKNOWN_ERROR');
 }

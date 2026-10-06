@@ -1,4 +1,5 @@
 import { LogIn, LogOut, Settings, User, UserPlus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ function initials(name: string): string {
 export function UserMenu() {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     await logout();
@@ -33,7 +35,11 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-9 w-9 rounded-full" aria-label="Menú de cuenta">
+        <Button
+          variant="ghost"
+          className="relative h-9 w-9 rounded-full"
+          aria-label={t('auth.accountMenu')}
+        >
           <Avatar className="h-9 w-9">
             <AvatarImage src={user?.avatarUrl ?? undefined} alt={user?.name ?? ''} />
             <AvatarFallback>
@@ -55,28 +61,28 @@ export function UserMenu() {
             <DropdownMenuItem asChild>
               <Link to="/ajustes">
                 <Settings className="mr-2 h-4 w-4" />
-                Ajustes
+                {t('nav.settings')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
-              Cerrar sesión
+              {t('auth.signOut')}
             </DropdownMenuItem>
           </>
         ) : (
           <>
-            <DropdownMenuLabel>Cuenta</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('auth.account')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link to="/login">
                 <LogIn className="mr-2 h-4 w-4" />
-                Iniciar sesión
+                {t('auth.signIn')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to="/registro">
                 <UserPlus className="mr-2 h-4 w-4" />
-                Crear cuenta
+                {t('auth.createAccount')}
               </Link>
             </DropdownMenuItem>
           </>

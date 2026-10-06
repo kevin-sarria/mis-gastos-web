@@ -1,21 +1,26 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { PasswordInput } from '@/shared/components/password-input';
-import { messageFromError } from '@/shared/lib/error-message';
 import { useChangePassword } from '@/features/auth/hooks/use-profile';
 import {
-  passwordChangeSchema,
+  createPasswordChangeSchema,
   type PasswordChangeFormValues,
 } from '@/features/auth/schemas/profile.schemas';
+import { PasswordInput } from '@/shared/components/password-input';
+import { messageFromError } from '@/shared/lib/error-message';
 
 export function PasswordForm() {
+  const { t } = useTranslation();
   const changePassword = useChangePassword();
 
+  const schema = useMemo(() => createPasswordChangeSchema(t), [t]);
+
   const form = useForm<PasswordChangeFormValues>({
-    resolver: zodResolver(passwordChangeSchema),
+    resolver: zodResolver(schema),
     defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
   });
 
@@ -25,18 +30,18 @@ export function PasswordForm() {
         currentPassword: values.currentPassword,
         newPassword: values.newPassword,
       });
-      toast.success('Contraseña actualizada');
+      toast.success(t('auth.passwordChange.updated'));
       form.reset();
       form.clearErrors();
     } catch (error) {
-      toast.error(messageFromError(error));
+      toast.error(messageFromError(error, t));
     }
   });
 
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       <div className="space-y-2">
-        <Label htmlFor="currentPassword">Contraseña actual</Label>
+        <Label htmlFor="currentPassword">{t('auth.passwordChange.current')}</Label>
         <PasswordInput
           id="currentPassword"
           autoComplete="current-password"
@@ -50,7 +55,7 @@ export function PasswordForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="newPassword">Nueva contraseña</Label>
+        <Label htmlFor="newPassword">{t('auth.passwordChange.new')}</Label>
         <PasswordInput
           id="newPassword"
           autoComplete="new-password"
@@ -62,7 +67,7 @@ export function PasswordForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Repite la nueva contraseña</Label>
+        <Label htmlFor="confirmPassword">{t('auth.passwordChange.confirm')}</Label>
         <PasswordInput
           id="confirmPassword"
           autoComplete="new-password"
@@ -76,7 +81,7 @@ export function PasswordForm() {
       </div>
 
       <Button type="submit" disabled={form.formState.isSubmitting}>
-        Cambiar contraseña
+        {t('auth.passwordChange.submit')}
       </Button>
     </form>
   );

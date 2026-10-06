@@ -1,11 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMemo } from 'react';
 import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { PasswordInput } from '@/shared/components/password-input';
 import {
   Select,
   SelectContent,
@@ -13,22 +14,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { PasswordInput } from '@/shared/components/password-input';
 import { messageFromError } from '@/shared/lib/error-message';
 import { useCurrencies } from '../hooks/use-currencies';
-import { registerSchema, type RegisterFormValues } from '../schemas/auth-form.schemas';
+import { createRegisterSchema, type RegisterFormValues } from '../schemas/auth-form.schemas';
 import { useAuth } from '../store/auth-context';
 
 export function RegisterForm() {
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const {
     data: currencies = [],
     isLoading: currenciesLoading,
     isError: currenciesError,
   } = useCurrencies();
 
+  const schema = useMemo(() => createRegisterSchema(t), [t]);
+
   const form = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(schema),
     defaultValues: { name: '', email: '', password: '', confirmPassword: '', currencyCode: '' },
   });
 
@@ -42,30 +47,35 @@ export function RegisterForm() {
         password: values.password,
         currencyCode: values.currencyCode,
       });
-      toast.success('Cuenta creada');
+      toast.success(t('auth.accountCreated'));
       navigate('/');
     } catch (error) {
-      toast.error(messageFromError(error));
+      toast.error(messageFromError(error, t));
     }
   });
 
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       <div className="space-y-2">
-        <Label htmlFor="name">Nombre</Label>
-        <Input id="name" autoComplete="name" placeholder="Tu nombre" {...form.register('name')} />
+        <Label htmlFor="name">{t('auth.name')}</Label>
+        <Input
+          id="name"
+          autoComplete="name"
+          placeholder={t('auth.namePlaceholder')}
+          {...form.register('name')}
+        />
         {form.formState.errors.name ? (
           <p className="text-sm text-destructive">{form.formState.errors.name.message}</p>
         ) : null}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email">Correo</Label>
+        <Label htmlFor="email">{t('auth.email')}</Label>
         <Input
           id="email"
           type="email"
           autoComplete="email"
-          placeholder="tu@correo.com"
+          placeholder={t('auth.emailPlaceholder')}
           {...form.register('email')}
         />
         {form.formState.errors.email ? (
@@ -74,7 +84,7 @@ export function RegisterForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Contraseña</Label>
+        <Label htmlFor="password">{t('auth.password')}</Label>
         <PasswordInput
           id="password"
           autoComplete="new-password"
@@ -86,7 +96,7 @@ export function RegisterForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Repite la contraseña</Label>
+        <Label htmlFor="confirmPassword">{t('auth.confirmPassword')}</Label>
         <PasswordInput
           id="confirmPassword"
           autoComplete="new-password"
@@ -98,13 +108,11 @@ export function RegisterForm() {
       </div>
 
       <div className="space-y-2">
-        <Label>Moneda</Label>
+        <Label>{t('auth.currency')}</Label>
         {currenciesLoading ? (
-          <p className="text-sm text-muted-foreground">Cargando monedas…</p>
+          <p className="text-sm text-muted-foreground">{t('auth.loadingCurrencies')}</p>
         ) : currenciesUnavailable ? (
-          <p className="text-sm text-destructive">
-            No se pudieron cargar las monedas. Comprueba que el backend esté en marcha.
-          </p>
+          <p className="text-sm text-destructive">{t('auth.currencyLoadError')}</p>
         ) : (
           <Select
             value={form.watch('currencyCode')}
@@ -113,7 +121,7 @@ export function RegisterForm() {
             }
           >
             <SelectTrigger id="currencyCode" className="w-full">
-              <SelectValue placeholder="Elige tu moneda" />
+              <SelectValue placeholder={t('auth.currencyPlaceholder')} />
             </SelectTrigger>
             <SelectContent position="popper" sideOffset={4}>
               {currencies.map((currency) => (
@@ -134,7 +142,7 @@ export function RegisterForm() {
         className="w-full"
         disabled={form.formState.isSubmitting || currenciesUnavailable}
       >
-        Crear cuenta
+        {t('auth.createAccountSubmit')}
       </Button>
     </form>
   );

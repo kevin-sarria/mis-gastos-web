@@ -30,12 +30,12 @@ class AuthService {
   async register(input: RegisterInput, meta: RequestMeta): Promise<AuthResult> {
     const currency = await currencyRepository.findByCode(input.currencyCode);
     if (!currency) {
-      throw new ValidationError('La moneda seleccionada no es válida');
+      throw new ValidationError('La moneda seleccionada no es válida', 'INVALID_CURRENCY');
     }
 
     const existing = await authRepository.findByEmail(input.email);
     if (existing) {
-      throw new ConflictError('Ya existe una cuenta con este correo');
+      throw new ConflictError('Ya existe una cuenta con este correo', 'EMAIL_TAKEN');
     }
 
     const passwordHash = await passwordService.hash(input.password);
@@ -53,12 +53,12 @@ class AuthService {
     const user = await authRepository.findByEmail(input.email);
 
     if (!user?.passwordHash) {
-      throw new UnauthorizedError('Correo o contraseña incorrectos');
+      throw new UnauthorizedError('Correo o contraseña incorrectos', 'INVALID_CREDENTIALS');
     }
 
     const valid = await passwordService.verify(user.passwordHash, input.password);
     if (!valid) {
-      throw new UnauthorizedError('Correo o contraseña incorrectos');
+      throw new UnauthorizedError('Correo o contraseña incorrectos', 'INVALID_CREDENTIALS');
     }
 
     return this.issueResult(user, meta);
@@ -140,7 +140,7 @@ class AuthService {
       record.usedAt ||
       record.expiresAt < new Date()
     ) {
-      throw new ValidationError('El enlace no es válido o ya expiró');
+      throw new ValidationError('El enlace no es válido o ya expiró', 'INVALID_TOKEN');
     }
 
     const passwordHash = await passwordService.hash(input.password);
@@ -164,7 +164,10 @@ class AuthService {
           (await currencyRepository.findDefault()) ?? (await currencyRepository.findFirstActive());
 
         if (!currency) {
-          throw new ValidationError('No hay monedas disponibles. Contacta al administrador.');
+          throw new ValidationError(
+            'No hay monedas disponibles. Contacta al administrador.',
+            'NO_CURRENCIES',
+          );
         }
 
         user = await authRepository.createUser({
@@ -203,12 +206,12 @@ class AuthService {
   async changePassword(userId: string, input: ChangePasswordInput): Promise<void> {
     const user = await authRepository.findById(userId);
     if (!user?.passwordHash) {
-      throw new ValidationError('Tu cuenta no usa contraseña');
+      throw new ValidationError('Tu cuenta no usa contraseña', 'NO_PASSWORD');
     }
 
     const valid = await passwordService.verify(user.passwordHash, input.currentPassword);
     if (!valid) {
-      throw new UnauthorizedError('La contraseña actual no es correcta');
+      throw new UnauthorizedError('La contraseña actual no es correcta', 'INVALID_CREDENTIALS');
     }
 
     const passwordHash = await passwordService.hash(input.newPassword);

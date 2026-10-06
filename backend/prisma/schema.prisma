@@ -253,7 +253,8 @@ model Alert {
   type       AlertType
   categoryId String?
   severity   String // INFO | WARNING | CRITICAL
-  message    String    @db.Text
+  message    String?   @db.Text
+  params     Json?
   readAt     DateTime?
   createdAt  DateTime  @default(now())
 

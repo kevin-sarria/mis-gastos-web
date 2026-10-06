@@ -1,4 +1,4 @@
-import type { AlertType } from '@prisma/client';
+import type { AlertType, Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
 
 export const alertRepository = {
@@ -30,7 +30,7 @@ export const alertRepository = {
     type: AlertType;
     categoryId: string | null;
     severity: string;
-    message: string;
+    params: Prisma.InputJsonValue;
   }) {
     return prisma.alert.create({ data });
   },

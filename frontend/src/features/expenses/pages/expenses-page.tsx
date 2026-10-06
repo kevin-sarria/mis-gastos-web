@@ -33,22 +33,20 @@ export function ExpensesPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t('pages.expenses.title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('pages.expenses.description')}</p>
+          <h1 className="text-2xl font-semibold tracking-tight">{t('expenses.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('expenses.description')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <MonthSwitcher />
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => setEditing(null)}>Nuevo gasto</Button>
+              <Button onClick={() => setEditing(null)}>{t('expenses.new')}</Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editing ? 'Editar gasto' : 'Nuevo gasto'}</DialogTitle>
+                <DialogTitle>{t(editing ? 'expenses.edit' : 'expenses.new')}</DialogTitle>
                 <DialogDescription>
-                  {editing
-                    ? 'Corrige los datos del gasto.'
-                    : 'Anota un gasto de este mes y adjunta su factura.'}
+                  {t(editing ? 'expenses.editDescription' : 'expenses.newDescription')}
                 </DialogDescription>
               </DialogHeader>
               <ExpenseForm expense={editing ?? undefined} onDone={() => setDialogOpen(false)} />
@@ -58,17 +56,17 @@ export function ExpensesPage() {
       </div>
 
       {isLoading ? (
-        <p className="text-muted-foreground">Cargando…</p>
+        <p className="text-muted-foreground">{t('common.loading')}</p>
       ) : expenses.length === 0 ? (
         <EmptyState
           icon={Receipt}
-          title="Sin gastos este mes"
-          description="Registra tu primer gasto del mes para empezar a controlar tus finanzas."
+          title={t('expenses.emptyTitle')}
+          description={t('expenses.emptyDescription')}
         />
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Gastos del mes</CardTitle>
+            <CardTitle>{t('expenses.listTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ExpenseList expenses={expenses} onEdit={openEdit} />

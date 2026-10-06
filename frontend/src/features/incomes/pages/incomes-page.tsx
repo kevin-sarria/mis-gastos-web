@@ -33,45 +33,40 @@ export function IncomesPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t('pages.incomes.title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('pages.incomes.description')}</p>
+          <h1 className="text-2xl font-semibold tracking-tight">{t('incomes.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('incomes.description')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <MonthSwitcher />
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => setEditing(null)}>Nuevo ingreso</Button>
+              <Button onClick={() => setEditing(null)}>{t('incomes.new')}</Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editing ? 'Editar ingreso' : 'Nuevo ingreso'}</DialogTitle>
+                <DialogTitle>{t(editing ? 'incomes.edit' : 'incomes.new')}</DialogTitle>
                 <DialogDescription>
-                  {editing
-                    ? 'Corrige los datos del ingreso.'
-                    : 'Registra una entrada de dinero de este mes.'}
+                  {t(editing ? 'incomes.editDescription' : 'incomes.newDescription')}
                 </DialogDescription>
               </DialogHeader>
-              <IncomeForm
-                income={editing ?? undefined}
-                onDone={() => setDialogOpen(false)}
-              />
+              <IncomeForm income={editing ?? undefined} onDone={() => setDialogOpen(false)} />
             </DialogContent>
           </Dialog>
         </div>
       </div>
 
       {isLoading ? (
-        <p className="text-muted-foreground">Cargando…</p>
+        <p className="text-muted-foreground">{t('common.loading')}</p>
       ) : incomes.length === 0 ? (
         <EmptyState
           icon={Wallet}
-          title="Sin ingresos este mes"
-          description="Registra tu primer ingreso del mes para ver tu balance."
+          title={t('incomes.emptyTitle')}
+          description={t('incomes.emptyDescription')}
         />
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Ingresos del mes</CardTitle>
+            <CardTitle>{t('incomes.listTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <IncomeList incomes={incomes} onEdit={openEdit} />

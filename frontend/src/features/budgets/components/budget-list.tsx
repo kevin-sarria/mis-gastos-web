@@ -1,14 +1,16 @@
 import { Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/features/auth/store/auth-context';
 import { DEFAULT_CATEGORY_COLOR } from '@/features/categories/domain/category-colors';
 import { cn } from '@/lib/utils';
-import { formatMoney } from '@/shared/lib/money';
+import { formatMoneyLocale } from '@/shared/lib/format';
 import type { Budget } from '../domain/budget';
 import { useDeleteBudget } from '../hooks/use-budgets';
 
 export function BudgetList({ budgets }: { budgets: Budget[] }) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const deleteBudget = useDeleteBudget();
 
   return (
@@ -30,19 +32,20 @@ export function BudgetList({ budgets }: { budgets: Budget[] }) {
               <div className="min-w-0">
                 <p className="truncate font-medium">{budget.name}</p>
                 <p className="text-sm text-muted-foreground">
-                  {budget.category?.name ?? 'Global'} · alerta al {budget.alertThresholdPct}%
+                  {budget.category?.name ?? t('common.global')} ·{' '}
+                  {t('common.alertAt', { percent: budget.alertThresholdPct })}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <span className="text-sm font-semibold">
-                  {formatMoney(budget.spentMinorUnits, user?.currency)} /{' '}
-                  {formatMoney(budget.amountMinorUnits, user?.currency)}
+                  {formatMoneyLocale(budget.spentMinorUnits, user?.currency)} /{' '}
+                  {formatMoneyLocale(budget.amountMinorUnits, user?.currency)}
                 </span>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => deleteBudget.mutate(budget.id)}
-                  aria-label="Eliminar presupuesto"
+                  aria-label={t('budgets.deleteLabel')}
                 >
                   <Trash2 className="h-4 w-4 text-muted-foreground" />
                 </Button>
@@ -59,13 +62,8 @@ export function BudgetList({ budgets }: { budgets: Budget[] }) {
               />
             </div>
 
-            <p
-              className={cn(
-                'text-xs',
-                exceeded ? 'text-destructive' : 'text-muted-foreground',
-              )}
-            >
-              {exceeded ? 'Presupuesto superado' : `${percent}% usado`}
+            <p className={cn('text-xs', exceeded ? 'text-destructive' : 'text-muted-foreground')}>
+              {exceeded ? t('common.budgetExceeded') : t('common.percentUsed', { percent })}
             </p>
           </li>
         );

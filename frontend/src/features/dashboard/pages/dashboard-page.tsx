@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAlerts, useMarkAlertRead } from '@/features/alerts/hooks/use-alerts';
 import { useAuth } from '@/features/auth/store/auth-context';
 import { MonthSwitcher } from '@/shared/components/month-switcher';
-import { formatMoney } from '@/shared/lib/money';
+import { formatMoneyLocale } from '@/shared/lib/format';
 import { useDashboard } from '../hooks/use-dashboard';
 
 interface StatCardProps {
@@ -16,6 +16,8 @@ interface StatCardProps {
 }
 
 function StatCard({ title, value, icon: Icon, trend }: StatCardProps) {
+  const { t } = useTranslation();
+
   return (
     <Card>
       <CardContent className="flex items-center gap-4 p-6">
@@ -32,7 +34,7 @@ function StatCard({ title, value, icon: Icon, trend }: StatCardProps) {
               ) : (
                 <ArrowDownRight className="h-3 w-3" />
               )}
-              {Math.abs(Math.round(trend * 100))}% vs mes anterior
+              {t('dashboard.trendVsPrevious', { percent: Math.abs(Math.round(trend * 100)) })}
             </p>
           ) : null}
         </div>
@@ -55,32 +57,36 @@ export function DashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{t('pages.dashboard.title')}</h1>
-          <p className="text-sm text-muted-foreground">Tu resumen mes a mes.</p>
+          <h1 className="text-2xl font-semibold tracking-tight">{t('dashboard.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('dashboard.description')}</p>
         </div>
         <MonthSwitcher />
       </div>
 
       {isLoading || !summary ? (
-        <p className="text-muted-foreground">Cargando…</p>
+        <p className="text-muted-foreground">{t('common.loading')}</p>
       ) : (
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="Balance" value={formatMoney(summary.balance, currency)} icon={Wallet} />
             <StatCard
-              title="Ingresos"
-              value={formatMoney(summary.totalIncome, currency)}
+              title={t('dashboard.balance')}
+              value={formatMoneyLocale(summary.balance, currency)}
+              icon={Wallet}
+            />
+            <StatCard
+              title={t('dashboard.incomes')}
+              value={formatMoneyLocale(summary.totalIncome, currency)}
               icon={ArrowDownRight}
               trend={summary.trends.income}
             />
             <StatCard
-              title="Gastos"
-              value={formatMoney(summary.totalExpenses, currency)}
+              title={t('dashboard.expenses')}
+              value={formatMoneyLocale(summary.totalExpenses, currency)}
               icon={ArrowUpRight}
               trend={summary.trends.expenses}
             />
             <StatCard
-              title="Alertas activas"
+              title={t('dashboard.activeAlerts')}
               value={String(summary.activeAlerts)}
               icon={AlertTriangle}
             />
@@ -89,18 +95,18 @@ export function DashboardPage() {
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Top categorías de gasto</CardTitle>
+                <CardTitle>{t('dashboard.topCategories')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {summary.topCategories.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Sin gastos este mes todavía.</p>
+                  <p className="text-sm text-muted-foreground">{t('dashboard.noExpenses')}</p>
                 ) : (
                   <ul className="space-y-3">
                     {summary.topCategories.map((category) => (
                       <li key={category.categoryId} className="flex items-center justify-between">
                         <span className="text-sm">{category.name}</span>
                         <span className="text-sm font-medium">
-                          {formatMoney(category.total, currency)}
+                          {formatMoneyLocale(category.total, currency)}
                         </span>
                       </li>
                     ))}
@@ -111,20 +117,24 @@ export function DashboardPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Alertas</CardTitle>
+                <CardTitle>{t('dashboard.alerts')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {unreadAlerts.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No tienes alertas pendientes. ¡Bien hecho!
-                  </p>
+                  <p className="text-sm text-muted-foreground">{t('dashboard.noAlerts')}</p>
                 ) : (
                   <ul className="space-y-3">
                     {unreadAlerts.map((alert) => (
                       <li key={alert.id} className="flex items-start justify-between gap-3">
-                        <p className="text-sm">{alert.message}</p>
+                        <p className="text-sm">
+                          {t(`alertTypes.${alert.type}`, {
+                            budgetName: alert.params.budgetName ?? '',
+                            spent: formatMoneyLocale(alert.params.spentMinorUnits ?? 0, currency),
+                            limit: formatMoneyLocale(alert.params.limitMinorUnits ?? 0, currency),
+                          })}
+                        </p>
                         <Button variant="ghost" size="sm" onClick={() => markRead.mutate(alert.id)}>
-                          Marcar leída
+                          {t('dashboard.markRead')}
                         </Button>
                       </li>
                     ))}

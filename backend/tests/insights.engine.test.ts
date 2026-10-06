@@ -15,7 +15,7 @@ describe('generateInsights', () => {
       monthsTracked: 1,
     });
 
-    expect(insights.some((i) => i.title === 'Gastaste más de lo que ingresaste')).toBe(true);
+    expect(insights.some((i) => i.code === 'SPENT_MORE_THAN_EARNED')).toBe(true);
   });
 
   it('reconoce un hábito de ahorro saludable', () => {
@@ -41,7 +41,7 @@ describe('generateInsights', () => {
       monthsTracked: 2,
     });
 
-    expect(insights.some((i) => i.title === 'Subida respecto al mes anterior')).toBe(true);
+    expect(insights.some((i) => i.code === 'EXPENSES_UP')).toBe(true);
   });
 });
 
