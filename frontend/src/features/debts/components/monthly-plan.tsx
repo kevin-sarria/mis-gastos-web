@@ -1,4 +1,4 @@
-import { Check, CircleDollarSign, Loader2, Target, X } from 'lucide-react';
+import { AlertTriangle, Check, CircleDollarSign, Loader2, Target, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/features/auth/store/auth-context';
+import { useDashboard } from '@/features/dashboard/hooks/use-dashboard';
 import { CurrencyInput } from '@/shared/components/currency-input';
 import { cn } from '@/lib/utils';
 import { formatMoneyLocale } from '@/shared/lib/format';
@@ -62,6 +63,7 @@ export function MonthlyPlanCard() {
   const savePlan = useSaveDebtPlan();
   const deletePlan = useDeleteDebtPlan();
   const addPayment = useAddPayment();
+  const { data: summary } = useDashboard();
 
   const [editing, setEditing] = useState(false);
   const [strategy, setStrategy] = useState<PayoffStrategy>('AVALANCHE');
@@ -144,6 +146,11 @@ export function MonthlyPlanCard() {
   const pendingTotal = plan.plannedTotalMinorUnits - plan.paidTotalMinorUnits;
   const doneCount = plan.items.filter((item) => item.isPaid).length;
 
+  // ¿Este plan cabe dentro de lo que ganas este mes?
+  const monthIncome = summary?.isCurrentMonth ? summary.totalIncome : 0;
+  const cannotPay = monthIncome > 0 && plan.plannedTotalMinorUnits > monthIncome;
+  const shortfall = Math.max(plan.plannedTotalMinorUnits - monthIncome, 0);
+
   return (
     <Card className="bg-primary/[0.05]">
       <CardContent className="space-y-4">
@@ -187,6 +194,25 @@ export function MonthlyPlanCard() {
           </p>
           <p className="text-xs text-muted-foreground">{t('debts.planCard.remaining')}</p>
         </div>
+
+        {cannotPay ? (
+          <div className="flex gap-2 rounded-lg bg-destructive/10 p-3">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" aria-hidden="true" />
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-destructive">
+                {t('dashboard.overloadedTitle')}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {t('dashboard.overloadedText', {
+                  payments: formatMoneyLocale(plan.plannedTotalMinorUnits, currency),
+                  income: formatMoneyLocale(monthIncome, currency),
+                  shortfall: formatMoneyLocale(shortfall, currency),
+                })}
+              </p>
+              <p className="text-sm text-muted-foreground">{t('dashboard.tightAdvice')}</p>
+            </div>
+          </div>
+        ) : null}
 
         <ul className="divide-y">
           {plan.items.map((item) => (

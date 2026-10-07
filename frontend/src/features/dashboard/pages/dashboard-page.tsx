@@ -88,6 +88,18 @@ export function DashboardPage() {
   const currency = user?.currency;
   const unreadAlerts = alerts.filter((alert) => !alert.readAt);
 
+  // ¿Cabe el plan de deudas dentro de los ingresos del mes?
+  const debtIncome = summary?.totalIncome ?? 0;
+  const debtPayments = summary?.debts.paymentsMinorUnits ?? 0;
+  const debtSharePct = debtIncome > 0 ? Math.round((debtPayments / debtIncome) * 100) : null;
+  const debtShortfall = Math.max(debtPayments - debtIncome, 0);
+  const debtOverloaded = debtIncome > 0 && debtPayments > debtIncome;
+  const debtTight = debtIncome > 0 && !debtOverloaded && (debtSharePct ?? 0) >= 40;
+  const debtMonthsOfIncome =
+    summary && debtIncome > 0
+      ? Math.ceil(summary.debts.totalBalanceMinorUnits / debtIncome)
+      : null;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -174,6 +186,59 @@ export function DashboardPage() {
                   <p className="text-xs font-medium text-primary">
                     {t('dashboard.monthsToFreedom', { months: summary.debts.monthsToFreedom })}
                   </p>
+                ) : null}
+
+                {debtMonthsOfIncome ? (
+                  <p className="text-xs text-muted-foreground">
+                    {t('dashboard.debtToIncome', { months: debtMonthsOfIncome })}
+                  </p>
+                ) : null}
+
+                {debtOverloaded || debtTight || debtIncome === 0 ? (
+                  <div
+                    className={cn(
+                      'mt-2 flex gap-2 rounded-lg p-3',
+                      debtOverloaded ? 'bg-destructive/10' : 'bg-amber-500/10',
+                    )}
+                  >
+                    <AlertTriangle
+                      className={cn(
+                        'mt-0.5 h-4 w-4 shrink-0',
+                        debtOverloaded ? 'text-destructive' : 'text-amber-600',
+                      )}
+                      aria-hidden="true"
+                    />
+                    <div className="space-y-1">
+                      <p
+                        className={cn(
+                          'text-sm font-semibold',
+                          debtOverloaded && 'text-destructive',
+                        )}
+                      >
+                        {debtOverloaded
+                          ? t('dashboard.overloadedTitle')
+                          : debtTight
+                            ? t('dashboard.tightTitle')
+                            : t('dashboard.noIncomeTitle')}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {debtOverloaded
+                          ? t('dashboard.overloadedText', {
+                              payments: formatMoneyLocale(debtPayments, currency),
+                              income: formatMoneyLocale(debtIncome, currency),
+                              shortfall: formatMoneyLocale(debtShortfall, currency),
+                            })
+                          : debtTight
+                            ? t('dashboard.tightText', { percent: debtSharePct ?? 0 })
+                            : t('dashboard.noIncomeText')}
+                      </p>
+                      {debtTight ? (
+                        <p className="text-sm text-muted-foreground">
+                          {t('dashboard.tightAdvice')}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
                 ) : null}
               </CardContent>
             </Card>

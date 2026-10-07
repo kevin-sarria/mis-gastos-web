@@ -246,6 +246,18 @@ export const en: typeof es = {
     debtsNoPlan: 'These are the minimum payments. Activate a plan in Debts to pay less interest.',
     debtsPaid: 'You have already paid {{amount}} of them.',
     monthsToFreedom: 'Debt-free in {{months}} months',
+    overloadedTitle: 'Your debt plan does not fit your income',
+    overloadedText:
+      'This month you have to pay {{payments}} and your income is {{income}}. You are short {{shortfall}}. You cannot sustain this plan like this.',
+    tightTitle: 'Debts are eating your income',
+    tightText:
+      'This month debts take {{percent}}% of what you earn. Above 40% is already the risk zone.',
+    tightAdvice:
+      'Lower the extra amount, stretch the term or cut spending: paying less each month beats failing to pay.',
+    noIncomeTitle: 'I do not know what you earn this month yet',
+    noIncomeText:
+      'Record your income for the month and I will tell you whether your debt plan is sustainable or will drown you.',
+    debtToIncome: 'Your total debt equals {{months}} months of your income.',
   },
   insights: {
     title: 'My progress',

@@ -244,6 +244,18 @@ export const es = {
     debtsNoPlan: 'Son las cuotas mínimas. Activa un plan en Deudas para pagar menos intereses.',
     debtsPaid: 'Ya pagaste {{amount}} de ellas.',
     monthsToFreedom: 'Libre de deudas en {{months}} meses',
+    overloadedTitle: 'Tu plan de deudas no cabe en tus ingresos',
+    overloadedText:
+      'Este mes tienes que pagar {{payments}} y tus ingresos son {{income}}. Te faltan {{shortfall}}. No puedes sostener este plan así.',
+    tightTitle: 'Las deudas se están comiendo tus ingresos',
+    tightText:
+      'Este mes las deudas se llevan el {{percent}}% de lo que ganas. Por encima del 40% ya es zona de riesgo.',
+    tightAdvice:
+      'Baja el aporte extra, alarga el plazo o busca reducir gastos: pagar menos cada mes es mejor que dejar de pagar.',
+    noIncomeTitle: 'Todavía no sé cuánto ganas este mes',
+    noIncomeText:
+      'Registra tus ingresos del mes y te diré si tu plan de deudas es sostenible o te va a ahogar.',
+    debtToIncome: 'Tu deuda total equivale a {{months}} meses de tus ingresos.',
   },
   insights: {
     title: 'Mi progreso',
