@@ -349,6 +349,13 @@ export const es = {
       principal: 'Capital prestado (opcional)',
       rate: 'Tasa efectiva mensual (TEM %)',
       rateHint: 'La que te dice el banco cada mes. Ojo: no es la anual.',
+      paymentMode: '¿Cómo se paga?',
+      modeInstallments: 'En cuotas mensuales',
+      modeSingle: 'De una sola vez',
+      paymentModeHint:
+        'Si es de una sola vez, se debe todo el saldo en una fecha y no hay cuota mensual.',
+      dueDate: 'Fecha de pago',
+      singlePaymentNote: 'Pago único: no hay cuotas, se debe todo el saldo de una vez.',
       installment: 'Cuota mensual',
       remainingMonths: 'Meses que faltan (opcional)',
       paymentDay: 'Día de pago (opcional)',

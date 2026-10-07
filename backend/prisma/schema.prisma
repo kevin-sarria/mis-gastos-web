@@ -165,6 +165,11 @@ model Debt {
   /// Día de pago del mes (1-31)
   paymentDay Int?
 
+  /// Se paga entero de una sola vez (sin cuotas): se debe todo en una fecha.
+  isSinglePayment Boolean @default(false)
+  /// Fecha límite cuando es de pago único.
+  dueDate DateTime? @db.Date
+
   startDate DateTime @db.Date
   notes     String?  @db.Text
   status    DebtStatus @default(ACTIVE)

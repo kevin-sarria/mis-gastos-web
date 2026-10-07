@@ -1,0 +1,2 @@
+ALTER TABLE `debt` ADD COLUMN `isSinglePayment` BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE `debt` ADD COLUMN `dueDate` DATE NULL;

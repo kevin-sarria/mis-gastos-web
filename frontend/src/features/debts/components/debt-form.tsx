@@ -53,13 +53,27 @@ const createDebtFormSchema = (t: TranslateFn) =>
       .max(100, t('validation.percentageRange')),
     installment: z
       .string()
-      .min(1, t('validation.required'))
-      .regex(/^\d+$/, t('validation.amountInvalid'))
-      .refine((value) => Number(value) > 0, t('validation.amountPositive')),
+      .regex(/^\d*$/, t('validation.amountInvalid'))
+      .optional(),
     remainingMonths: z.number().int().min(1).max(600).optional(),
     paymentDay: z.number().int().min(1).max(31).optional(),
+    /** Pago único: no hay cuotas, se debe todo el saldo en una fecha. */
+    isSinglePayment: z.boolean(),
+    dueDate: z.string().optional(),
     startDate: z.string().min(1, t('validation.chooseDate')),
     notes: z.string().trim().max(2000).optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.isSinglePayment && (!data.installment || Number(data.installment) <= 0)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['installment'],
+        message: t('validation.amountPositive'),
+      });
+    }
+    if (data.isSinglePayment && !data.dueDate) {
+      ctx.addIssue({ code: 'custom', path: ['dueDate'], message: t('validation.chooseDate') });
+    }
   });
 
 type DebtFormValues = z.infer<ReturnType<typeof createDebtFormSchema>>;
@@ -81,6 +95,8 @@ function defaultValuesFrom(debt?: Debt): DebtFormValues {
       principal: '',
       ratePercent: 0,
       installment: '',
+      isSinglePayment: false,
+      dueDate: '',
       startDate: todayInputValue(),
       notes: '',
     };
@@ -95,6 +111,8 @@ function defaultValuesFrom(debt?: Debt): DebtFormValues {
     installment: String(debt.installmentMinorUnits),
     remainingMonths: debt.remainingMonths ?? undefined,
     paymentDay: debt.paymentDay ?? undefined,
+    isSinglePayment: debt.isSinglePayment,
+    dueDate: debt.dueDate ? debt.dueDate.slice(0, 10) : '',
     startDate: debt.startDate.slice(0, 10),
     notes: debt.notes ?? '',
   };
@@ -128,8 +146,15 @@ export function DebtForm({ debt, onDone }: DebtFormProps) {
         balanceMinorUnits: Number(values.balance),
         principalMinorUnits: values.principal ? Number(values.principal) : null,
         monthlyRateMicro: percentToMicro(values.ratePercent),
-        installmentMinorUnits: Number(values.installment),
-        remainingMonths: values.remainingMonths ?? null,
+        isSinglePayment: values.isSinglePayment,
+        dueDate:
+          values.isSinglePayment && values.dueDate
+            ? new Date(values.dueDate).toISOString()
+            : null,
+        installmentMinorUnits: values.isSinglePayment
+          ? Number(values.balance)
+          : Number(values.installment),
+        remainingMonths: values.isSinglePayment ? 1 : (values.remainingMonths ?? null),
         paymentDay: values.paymentDay ?? null,
         startDate: new Date(values.startDate).toISOString(),
         notes: values.notes || null,
@@ -163,6 +188,33 @@ export function DebtForm({ debt, onDone }: DebtFormProps) {
           {...form.register('name')}
         />
         {errors.name ? <p className="text-sm text-destructive">{errors.name.message}</p> : null}
+      </div>
+
+      <div className="space-y-2">
+        <Label>{t('debts.form.paymentMode')}</Label>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            size="sm"
+            variant={form.watch('isSinglePayment') ? 'outline' : 'default'}
+            onClick={() => form.setValue('isSinglePayment', false)}
+          >
+            {t('debts.form.modeInstallments')}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={form.watch('isSinglePayment') ? 'default' : 'outline'}
+            onClick={() => {
+              form.setValue('isSinglePayment', true);
+              const balance = form.getValues('balance');
+              if (balance) form.setValue('installment', balance);
+            }}
+          >
+            {t('debts.form.modeSingle')}
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">{t('debts.form.paymentModeHint')}</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -209,7 +261,11 @@ export function DebtForm({ debt, onDone }: DebtFormProps) {
                 placeholder="0"
                 minorUnits={minorUnits}
                 value={field.value}
-                onValueChange={field.onChange}
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  // En pago único la "cuota" es el saldo completo.
+                  if (form.getValues('isSinglePayment')) form.setValue('installment', value);
+                }}
               />
             )}
           />
@@ -255,35 +311,58 @@ export function DebtForm({ debt, onDone }: DebtFormProps) {
 
         <div className="space-y-2">
           <Label htmlFor="debt-installment">{t('debts.form.installment')}</Label>
-          <Controller
-            control={form.control}
-            name="installment"
-            render={({ field }) => (
-              <CurrencyInput
-                id="debt-installment"
-                placeholder="0"
-                minorUnits={minorUnits}
-                value={field.value}
-                onValueChange={field.onChange}
+          {form.watch('isSinglePayment') ? (
+            <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">
+              {t('debts.form.singlePaymentNote')}
+            </p>
+          ) : (
+            <>
+              <Controller
+                control={form.control}
+                name="installment"
+                render={({ field }) => (
+                  <CurrencyInput
+                    id="debt-installment"
+                    placeholder="0"
+                    minorUnits={minorUnits}
+                    value={field.value ?? ''}
+                    onValueChange={field.onChange}
+                  />
+                )}
               />
-            )}
-          />
-          {errors.installment ? (
-            <p className="text-sm text-destructive">{errors.installment.message}</p>
-          ) : null}
+              {errors.installment ? (
+                <p className="text-sm text-destructive">{errors.installment.message}</p>
+              ) : null}
+            </>
+          )}
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="space-y-2">
-          <Label htmlFor="debt-months">{t('debts.form.remainingMonths')}</Label>
-          <Input
-            id="debt-months"
-            type="number"
-            min={1}
-            max={600}
-            {...form.register('remainingMonths', { setValueAs: (v) => (v === '' ? undefined : Number(v)) })}
-          />
+          <Label htmlFor="debt-months">
+            {form.watch('isSinglePayment')
+              ? t('debts.form.dueDate')
+              : t('debts.form.remainingMonths')}
+          </Label>
+          {form.watch('isSinglePayment') ? (
+            <>
+              <Input id="debt-months" type="date" {...form.register('dueDate')} />
+              {errors.dueDate ? (
+                <p className="text-sm text-destructive">{errors.dueDate.message}</p>
+              ) : null}
+            </>
+          ) : (
+            <Input
+              id="debt-months"
+              type="number"
+              min={1}
+              max={600}
+              {...form.register('remainingMonths', {
+                setValueAs: (v) => (v === '' ? undefined : Number(v)),
+              })}
+            />
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="debt-day">{t('debts.form.paymentDay')}</Label>

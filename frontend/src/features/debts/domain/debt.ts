@@ -21,6 +21,8 @@ export interface Debt {
   installmentMinorUnits: number;
   remainingMonths: number | null;
   paymentDay: number | null;
+  isSinglePayment: boolean;
+  dueDate: string | null;
   startDate: string;
   notes: string | null;
   status: DebtStatus;
@@ -51,6 +53,8 @@ export interface DebtCreateInput {
   installmentMinorUnits: number;
   remainingMonths: number | null;
   paymentDay: number | null;
+  isSinglePayment: boolean;
+  dueDate: string | null;
   startDate: string;
   notes: string | null;
   status: DebtStatus;

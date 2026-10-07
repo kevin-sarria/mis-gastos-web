@@ -63,6 +63,22 @@ function activeDebts(debts: Debt[]): PayoffDebtInput[] {
     }));
 }
 
+/**
+ * Una deuda de pago único no tiene cuota: se debe todo el saldo de golpe.
+ * Se normaliza a "1 sola cuota = saldo completo" para que el motor, el plan
+ * y el balance la traten igual que cualquier otra deuda.
+ */
+function normalizeSinglePayment(input: DebtCreateInput | DebtUpdateInput) {
+  if (!input.isSinglePayment) {
+    return input;
+  }
+  return {
+    ...input,
+    installmentMinorUnits: input.balanceMinorUnits ?? input.installmentMinorUnits,
+    remainingMonths: 1,
+  };
+}
+
 export const debtService = {
   async list(userId: string) {
     const debts = await debtRepository.list(userId);
@@ -95,11 +111,15 @@ export const debtService = {
   },
 
   create(userId: string, input: DebtCreateInput) {
-    return debtRepository.create(userId, input);
+    return debtRepository.create(userId, normalizeSinglePayment(input) as DebtCreateInput);
   },
 
   async update(userId: string, id: string, input: DebtUpdateInput) {
-    const debt = await debtRepository.update(id, userId, input);
+    const debt = await debtRepository.update(
+      id,
+      userId,
+      normalizeSinglePayment(input) as DebtUpdateInput,
+    );
     if (!debt) {
       throw new NotFoundError('Deuda no encontrada');
     }

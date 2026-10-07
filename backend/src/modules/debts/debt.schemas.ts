@@ -24,6 +24,9 @@ export const debtCreateSchema = z.object({
   installmentMinorUnits: z.number().int().positive(),
   remainingMonths: z.number().int().positive().max(600).nullish(),
   paymentDay: z.number().int().min(1).max(31).nullish(),
+  /** Pago único: se debe todo el saldo en una sola fecha, sin cuotas. */
+  isSinglePayment: z.boolean().default(false),
+  dueDate: z.coerce.date().nullish(),
   startDate: z.coerce.date(),
   notes: z.string().trim().max(2000).nullish(),
   status: z.enum(DEBT_STATUSES).default('ACTIVE'),

@@ -351,6 +351,14 @@ export const en: typeof es = {
       principal: 'Amount borrowed (optional)',
       rate: 'Monthly effective rate (MER %)',
       rateHint: 'The monthly one the bank quotes. Careful: not the annual one.',
+      paymentMode: 'How is it paid?',
+      modeInstallments: 'In monthly instalments',
+      modeSingle: 'All at once',
+      paymentModeHint:
+        'If it is all at once, the whole balance is due on one date and there is no monthly payment.',
+      dueDate: 'Payment date',
+      singlePaymentNote:
+        'Single payment: there are no instalments, the whole balance is due at once.',
       installment: 'Monthly payment',
       remainingMonths: 'Months left (optional)',
       paymentDay: 'Payment day (optional)',
